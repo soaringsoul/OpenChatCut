@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { ServerResponse } from 'node:http';
 import type { CodexAgentToolSpec, CodexTurnRequest, CodexTurnStreamEvent } from '../../shared/codex-agent.ts';
 import { codexModels, codexStatus, runServerCodexTurn } from '../plugins/codex-agent.ts';
+import { recordHealth } from '../model-health.ts';
 
 const READINESS_TTL_MS = 30_000;
 const TOOL_HANDOFF_MS = 150;
@@ -143,6 +144,7 @@ export async function respondCodexChatCompletion(
   }, controller.signal);
   clearTimeout(handoff);
   if (toolCalls.length) failure = '';
+  if (run === runServerCodexTurn) recordHealth('codex', failure ? undefined : 200, 'codex', failure);
   const finish = toolCalls.length ? 'tool_calls' : 'stop';
   if (stream) {
     if (failure) res.write(`data: ${JSON.stringify({ error: { message: failure } })}\n\n`);

@@ -5,6 +5,7 @@ import { requireStudioModel, studioModelCatalog, studioModelPathAllowed } from '
 import { studioModelBody } from '../studio-model-body.ts';
 import { stepfunImageGenerationBody } from './image-provider-clients.ts';
 import { refreshCodexStudioReadiness, respondCodexChatCompletion } from '../codex/studio-text.ts';
+import { recordHealth } from '../model-health.ts';
 import { previewStudioMigration, commitStudioMigration, restoreStudioMigration } from '../studio-model-migration.ts';
 
 export function studioModelsPlugin(): Plugin {
@@ -49,6 +50,7 @@ export function studioModelsPlugin(): Plugin {
             try {
               await respondCodexChatCompletion(res, JSON.parse(body?.toString('utf8') || '{}') as Record<string, unknown>, connection.modelId);
             } catch (error) {
+              recordHealth('codex', undefined, 'codex', error instanceof Error ? error.message : '');
               if (!res.headersSent) send(400, { error: error instanceof Error ? error.message : 'Codex 请求无效' });
               else res.end();
             }
@@ -61,6 +63,7 @@ export function studioModelsPlugin(): Plugin {
           req.headers = { ...(req.headers['content-type'] ? { 'content-type': req.headers['content-type'] } : {}),
             ...(req.headers.accept ? { accept: req.headers.accept } : {}) };
           return proxyMiddleware({ target: () => connection.baseUrl, headers: () => connection.headers, body, suppressErrorDetails: true,
+            onUpstreamStatus: (status) => recordHealth(connection.provider, status, 'studio'),
             errorMessage: (status) => status === 402
               ? '上游账户额度不足，或该模型未开通付费（HTTP 402）。请到对应厂商控制台检查余额，或更换已开通的模型。'
               : status === 429

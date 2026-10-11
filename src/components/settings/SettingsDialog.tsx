@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { theme } from '../../theme';
 import { t, useT } from '../../i18n/locale';
 import { Icon } from '../icons';
@@ -41,9 +41,16 @@ import {
 } from './settingsSchema';
 import {
   bodyRow, btnGhost, btnPrimary, categoryTabStyle, code, dot, foot, footMsg,
-  head, iconBtn, licenseLink, navLabel, navRowStyle, overlay, pagePanel, pageShell, panel, revealLabel,
+  head, iconBtn, licenseLink, navLabel, navRowStyle, overlay as overlayStyle, pagePanel, pageShell, panel, revealLabel,
   routeBox, subTabRow, subTabStyle, tabBar, tabNote, tabRow, vendorCol,
 } from './SettingsDialog.styles';
+
+import { ModelSettingsView } from './ModelSettingsView';
+import type { CheckResult, MsController, Overlay } from './modelSettingsController';
+import { isCredentialPage, type HealthMap, type ModelCtx } from './modelSettingsModel';
+import { loadMcpGuideDialog } from './mcpGuideLoader';
+
+const McpGuideDialog = lazy(() => loadMcpGuideDialog().then((m) => ({ default: m.McpGuideDialog })));
 
 // Global settings: top tabs = category, sub-tabs = capability (with status indicator);
 // left column = list of providers under the current capability (generating four capabilities with a "default provider" route select at the top);
@@ -271,6 +278,11 @@ export function SettingsDialog({ onClose, initialVendor, presentation = 'dialog'
   const [values, setValues] = useState<Values>({});
   const { group, page, selectGroup, selectVendor, openPage } = useTreeSelection(initialVendor);
   const [reveal, setReveal] = useState(false);
+  const [classic, setClassic] = useState(false);
+  const [overlay, setOverlay] = useState<Overlay | null>(() => initialOverlay(initialVendor));
+  const [mcpOpen, setMcpOpen] = useState(false);
+  const { health, refreshHealth } = useProviderHealth();
+  const [scheme, toggleScheme] = useSettingsScheme();
   const refreshStatus = async (): Promise<void> => {
     try {
       const response = await fetch('/api/keys');
@@ -281,26 +293,39 @@ export function SettingsDialog({ onClose, initialVendor, presentation = 'dialog'
       // Keep the stale snapshot; the next save or dialog open refreshes it.
     }
   };
+  // Note actions / missing-model routes open the page in the classic tree, or as a drawer on the overview.
+  const routePage = (route: string): void => {
+    if (classic) { openPage(route); return; }
+    const target = seedSelection(route);
+    setOverlay({ type: 'pages', title: t(target.vendor.title), pages: [target.vendor] });
+  };
   const ctx = useFieldContext(status, values, setValues, reveal, refreshStatus,
-    page.connection === 'copilot', openPage);
+    classic ? page.connection === 'copilot' : overlayWants(overlay, 'copilot'), routePage);
   useEffect(() => {
     if (!status?.models) return;
     syncTranscriptionPreferences(status.models);
     syncLocalAsrModel(status.models.LOCAL_ASR_MODEL);
   }, [status]);
-  const { save, saving, msg, error } = useSaveKeys(values, (next) => {
+  const onSaved = (next: KeyStatusResponse): void => {
     setStatus(next);
     // Desktop: the main process owns the zoom factor; re-apply after the
     // saved UI_SCALE changed so the change is visible immediately.
     void window.openChatCutDesktop?.windowAction('apply-ui-scale');
     applySavedToAgent(next);
+    window.dispatchEvent(new Event('studio-models-updated'));
+  };
+  const { save, saving, msg, error } = useSaveKeys(values, (next) => {
+    onSaved(next);
     // The status effect synchronizes all transcription runtime preferences.
     setValues({});
-    window.dispatchEvent(new Event('studio-models-updated'));
   }, status?.revision);
   const dirty = Object.keys(values).length > 0;
   const { requestClose, warn } = useCloseGuard(dirty, onClose);
-  useEscape(requestClose);
+  useEscape(() => {
+    if (mcpOpen) return;
+    if (!classic && overlay) { if (!dirty || overlay.type === 'switch') setOverlay(null); else requestClose(); return; }
+    requestClose();
+  });
 
   const fullPage = presentation === 'page';
   const updateAction = resolveUpstreamUpdateAction(updateState, hasDesktopUpdateSupport());
@@ -313,22 +338,83 @@ export function SettingsDialog({ onClose, initialVendor, presentation = 'dialog'
   const message = shownError ? { text: shownError, color: WARN }
     : warn ? { text: warn, color: theme.gold }
       : msg ? { text: msg, color: ON } : null;
+  const versionControl = (
+    <SettingsVersionControl
+      versionLabel={t('当前版本号：{version}', { version: formatDisplayVersion(CURRENT_APP_VERSION) })}
+      actionLabel={updateAction.label}
+      disabled={updateAction.disabled}
+      onAction={() => { runUpstreamUpdateCommand(updateAction.command); }}
+    />
+  );
+  const mcpGuide = mcpOpen ? <Suspense fallback={null}><McpGuideDialog onClose={() => setMcpOpen(false)} /></Suspense> : null;
+
+  if (!classic) {
+    const model: ModelCtx = {
+      status, codexStatus, copilotStatus, claudeCodeStatus, codexModels: ctx.codex.models, health,
+    };
+    const controller: MsController = {
+      status, ctx, model, health, refreshHealth,
+      check: async (pageKey, overrides = {}) => {
+        try {
+          const response = await fetch('/api/keys/check', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ page: pageKey, overrides }),
+          });
+          const body = await response.json() as CheckResult & { error?: string };
+          if (!response.ok) return { ok: false, kind: 'error', message: body.error || t('检测失败 ({n})', { n: response.status }) };
+          return body;
+        } catch (err) {
+          return { ok: false, kind: 'network', message: err instanceof Error ? err.message : String(err) };
+        } finally {
+          void refreshHealth();
+        }
+      },
+      applyPatch: async (patch) => {
+        try {
+          const response = await fetch('/api/keys', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...(status?.revision ? { 'If-Match': status.revision } : {}) },
+            body: JSON.stringify(patch),
+          });
+          const body = await response.json().catch(() => ({})) as Partial<KeyStatusResponse> & { error?: string };
+          if (!response.ok) return body.error || t('保存失败 ({n})', { n: response.status });
+          onSaved(body as KeyStatusResponse);
+          return null;
+        } catch (err) {
+          return err instanceof Error ? err.message : String(err);
+        }
+      },
+      dirty, saving, save,
+      discard: (names) => setValues((previous) => names
+        ? Object.fromEntries(Object.entries(previous).filter(([k]) => !names.includes(k)))
+        : {}),
+      message: shownError ? { text: shownError, tone: 'bad' } : warn ? { text: warn, tone: 'warn' } : msg ? { text: msg, tone: 'ok' } : null,
+      overlay, setOverlay, openMcpGuide: () => setMcpOpen(true), setReveal,
+    };
+    return (
+      <>
+        {!fullPage ? <div className="ms-backdrop" onMouseDown={requestClose} /> : null}
+        <div className={`ms ms-root${fullPage ? '' : ' ms-dialog'}${scheme === 'dark' ? ' ms-dark' : ''}`} onMouseDown={(e) => e.stopPropagation()}>
+          <ModelSettingsView c={controller} fullPage={fullPage} versionSlot={versionControl} scheme={scheme}
+            onToggleScheme={toggleScheme} onClose={requestClose} onClassic={() => { setOverlay(null); setClassic(true); }} />
+        </div>
+        {mcpGuide}
+      </>
+    );
+  }
 
   return (
-    <div style={fullPage ? pageShell : overlay} onMouseDown={fullPage ? undefined : requestClose}>
+    <div style={fullPage ? pageShell : overlayStyle} onMouseDown={fullPage ? undefined : requestClose}>
       <div style={fullPage ? pagePanel : panel} onMouseDown={(e) => e.stopPropagation()}>
         <header style={head}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button type="button" onClick={() => setClassic(false)} title={t('返回总览')} style={{ ...btnGhost, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <span aria-hidden>‹</span>{t('返回总览')}
+            </button>
             <span style={{ color: theme.accent, display: 'inline-flex' }}><Icon name="sliders" size={15} /></span>
             <b style={{ fontSize: 14 }}>{t(fullPage ? '模型设置' : '设置 · API 密钥')}</b>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <SettingsVersionControl
-              versionLabel={t('当前版本号：{version}', { version: formatDisplayVersion(CURRENT_APP_VERSION) })}
-              actionLabel={updateAction.label}
-              disabled={updateAction.disabled}
-              onAction={() => { runUpstreamUpdateCommand(updateAction.command); }}
-            />
+            {versionControl}
             <button type="button" onClick={requestClose} title={t('关闭')} style={iconBtn}><Icon name="x" size={15} /></button>
           </div>
         </header>
@@ -342,8 +428,64 @@ export function SettingsDialog({ onClose, initialVendor, presentation = 'dialog'
         <FooterBar reveal={reveal} onReveal={setReveal} message={message}
           dirty={dirty} saving={saving} onClose={requestClose} closeLabel={fullPage ? '返回' : '关闭'} onSave={() => { void save(); }} />
       </div>
+      {mcpGuide}
     </div>
   );
+}
+
+/** Routed opens (missing model pack, note actions) land on that page as a drawer. Group keys stay on the overview. */
+function initialOverlay(initialVendor?: string): Overlay | null {
+  if (!initialVendor || !initialVendor.includes('/')) return null;
+  const target = seedSelection(initialVendor);
+  if (target.vendor.key !== initialVendor && target.group.key !== initialVendor) return null;
+  const key = target.vendor.key.split('/')[1];
+  if (isCredentialPage(target.vendor) && key) return { type: 'service', key };
+  return { type: 'pages', title: target.vendor.title, pages: [target.vendor] };
+}
+
+function overlayWants(overlay: Overlay | null, connection: string): boolean {
+  if (!overlay) return false;
+  if (overlay.type === 'service') return overlay.key === connection;
+  if (overlay.type === 'add') return overlay.service === connection;
+  if (overlay.type === 'pages') return overlay.pages.some((p) => p.connection === connection);
+  return false;
+}
+
+function useProviderHealth(): { health: HealthMap; refreshHealth: () => Promise<void> } {
+  const [health, setHealth] = useState<HealthMap>({});
+  const refreshHealth = async (): Promise<void> => {
+    try {
+      const response = await fetch('/api/keys/health');
+      if (!response.ok) return;
+      const body = await response.json() as { providers?: HealthMap };
+      setHealth(body.providers ?? {});
+    } catch {
+      // Health is advisory; the overview falls back to "未检测".
+    }
+  };
+  useEffect(() => { void refreshHealth(); }, []);
+  return { health, refreshHealth };
+}
+
+const SCHEME_KEY = 'cc.modelSettingsScheme';
+/** Follows the editor skin (light / dark) unless the user flipped it here. */
+function useSettingsScheme(): ['light' | 'dark', () => void] {
+  const skin = (): 'light' | 'dark' => {
+    try {
+      const stored = localStorage.getItem(SCHEME_KEY);
+      if (stored === 'light' || stored === 'dark') return stored;
+      return getComputedStyle(document.documentElement).getPropertyValue('--cc-color-scheme').trim() === 'dark' ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  };
+  const [scheme, setScheme] = useState<'light' | 'dark'>(skin);
+  const toggle = (): void => {
+    const next = scheme === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem(SCHEME_KEY, next); } catch { /* session only */ }
+    setScheme(next);
+  };
+  return [scheme, toggle];
 }
 
 // ── Top tabs (category tabs → capability sub-tabs) ──────────────────────────────────────

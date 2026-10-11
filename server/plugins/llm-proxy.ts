@@ -11,6 +11,7 @@ import {
 import { resolveLlmProviderConfig } from '../llm-config.ts';
 import { xaiOauthAccessToken } from '../xai-oauth-session.ts';
 import { proxyMiddleware } from '../proxy.ts';
+import { recordHealth } from '../model-health.ts';
 
 function keyReader(name: string): string {
   return getKey(name as KeyName);
@@ -83,6 +84,9 @@ export function llmProxyPlugin(): Plugin {
         headers: llmHeaders,
         forceJsonContentType: true,
         errorMessage: llmErrorMessage,
+        onUpstreamStatus: (status, req) => {
+          try { recordHealth(llmProviderForRequest(req), status, 'agent'); } catch { /* unsupported provider was rejected above */ }
+        },
       }));
     },
   };

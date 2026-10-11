@@ -40,6 +40,8 @@ export interface ProxyRoute {
   /** Validated body for a server-owned model connection. */
   body?: Uint8Array;
   suppressErrorDetails?: boolean;
+  /** Observe every upstream status (provider health tracking); never sees bodies. */
+  onUpstreamStatus?: (status: number, req: IncomingMessage) => void;
 }
 
 export function proxyMiddleware(route: ProxyRoute): Middleware {
@@ -86,6 +88,7 @@ export function proxyMiddleware(route: ProxyRoute): Middleware {
       ...(agent ? { agent } : {}),
     }, (upRes) => {
       const status = upRes.statusCode ?? 502;
+      try { route.onUpstreamStatus?.(status, req); } catch { /* observers never break the relay */ }
       if (status >= 400 && route.errorMessage) {
         if (route.suppressErrorDetails) upRes.resume();
         else {

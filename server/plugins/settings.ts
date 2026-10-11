@@ -1,6 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
-import { keyStatus, setKeys } from '../keystore.ts';
+import { getKey, keyStatus, setKeys, type KeyName } from '../keystore.ts';
+import { healthSnapshot } from '../model-health.ts';
+import { checkProvider } from '../model-check.ts';
 import { invalidateStudioModels } from '../studio-models.ts';
 import { runProbe } from '../key-probes.ts';
 import {
@@ -87,8 +89,17 @@ function settingsBody(restartRequired = false) {
   const profile = runtimeProfile();
   const status = keyStatus();
   const configured = readDataDirPointer() ?? '';
+  // Masked tail of each saved secret ("••••abcd") so the overview can tell keys
+  // apart without exposing them; short values only report that they exist.
+  const hints: Record<string, string> = {};
+  for (const [name, state] of Object.entries(status.keys)) {
+    if (!state.configured || Object.hasOwn(status.models, name)) continue;
+    const value = getKey(name as KeyName);
+    hints[name] = value.length >= 12 ? value.slice(-4) : '';
+  }
   return {
     ...status,
+    hints,
     // The storage root is configuration, not a credential: echo it raw so the
     // settings field shows where projects actually live. It is not a keystore
     // key (the keystore lives inside the root), hence the explicit merge.
@@ -149,7 +160,18 @@ export function settingsPlugin(): Plugin {
     configureServer(server) {
       server.middlewares.use('/api/keys', async (req, res) => {
         try {
+          if (req.method === 'GET' && req.url?.startsWith('/health')) { sendJson(res, 200, { providers: healthSnapshot() }); return; }
           if (req.method === 'GET') { sendJson(res, 200, settingsBody()); return; }
+          // POST /api/keys/check: real minimal call (1-token completion for agent LLMs), recorded as provider health.
+          if (req.method === 'POST' && req.url === '/check') {
+            const body = await readBody(req);
+            const page = typeof body.page === 'string' ? body.page : '';
+            const overrides = body.overrides && typeof body.overrides === 'object' && !Array.isArray(body.overrides)
+              ? body.overrides as Record<string, unknown>
+              : {};
+            sendJson(res, 200, await checkProvider(page, overrides));
+            return;
+          }
           // POST /api/keys/test: "Test connection" detection. overrides = unsaved temporary values of the panel,
           // Only this detection takes effect and does not fall into keystore / .env.local; the result will never contain the key value.
           if (req.method === 'POST' && req.url === '/test') {

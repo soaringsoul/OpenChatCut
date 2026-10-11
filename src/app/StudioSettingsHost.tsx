@@ -10,5 +10,5 @@ export function StudioSettingsHost() {
     window.addEventListener('studio-open-model-settings', open);
     return () => window.removeEventListener('studio-open-model-settings', open);
   }, []);
-  return route !== null ? <Suspense fallback={null}><Settings initialVendor={route} onClose={() => { setRoute(null); notifyStudioWorkspace('model-settings-closed'); }} /></Suspense> : null;
+  return route !== null ? <Suspense fallback={null}><Settings presentation="page" initialVendor={route} onClose={() => { setRoute(null); notifyStudioWorkspace('model-settings-closed'); }} /></Suspense> : null;
 }

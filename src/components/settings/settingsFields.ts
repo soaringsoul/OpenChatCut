@@ -57,6 +57,8 @@ export interface KeyStatusResponse {
   keys: Record<string, KeyState>;
   caps: Record<string, boolean>;
   models: Record<string, string>;
+  /** Last four characters of saved secrets ('' when too short to mask safely). */
+  hints?: Record<string, string>;
   /** Set by the save response when the change only lands on the next launch
    *  (project storage folder: the runtime profile resolves at startup). */
   restartRequired?: boolean;
