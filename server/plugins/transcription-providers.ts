@@ -6,6 +6,7 @@ import { createGroq } from '@ai-sdk/groq';
 import { createOpenAI } from '@ai-sdk/openai';
 
 import { versionedApiBaseUrl } from './media-provider-config.ts';
+import { transcribeStepfunAudio } from './transcription-stepfun.ts';
 
 import type {
   CloudTranscriptionProvider,
@@ -18,6 +19,12 @@ import type {
 
 export class TranscriptionConfigurationError extends Error {}
 
+function providerLabel(provider: CloudTranscriptionProvider): string {
+  if (provider === 'elevenlabs') return 'ElevenLabs';
+  if (provider === 'stepfun') return 'StepFun';
+  return provider[0]!.toUpperCase() + provider.slice(1);
+}
+
 function requireProviderKey(options: TranscriptionOptions, provider: CloudTranscriptionProvider): string {
   if (provider === 'cartesia' && /^ink-2(?:-|$)/i.test(options.cartesiaModel)) {
     throw new TranscriptionConfigurationError(
@@ -29,10 +36,10 @@ function requireProviderKey(options: TranscriptionOptions, provider: CloudTransc
       : provider === 'deepgram' ? options.deepgramApiKey
         : provider === 'groq' ? options.groqApiKey
           : provider === 'elevenlabs' ? options.elevenApiKey
-            : options.cartesiaApiKey;
+            : provider === 'stepfun' ? options.stepfunApiKey
+              : options.cartesiaApiKey;
   if (key) return key;
-  const label = provider === 'elevenlabs' ? 'ElevenLabs' : provider[0]!.toUpperCase() + provider.slice(1);
-  throw new TranscriptionConfigurationError(`${label} API key is not configured`);
+  throw new TranscriptionConfigurationError(`${providerLabel(provider)} API key is not configured`);
 }
 
 export function assertTranscriptionProviderConfigured(
@@ -43,6 +50,9 @@ export function assertTranscriptionProviderConfigured(
 }
 
 async function runProvider(options: TranscriptionOptions, request: CloudTranscriptionRequest) {
+  if (request.provider === 'stepfun') {
+    return transcribeStepfunAudio(options, request.audio, request.language);
+  }
   const key = requireProviderKey(options, request.provider);
   const common = { audio: request.audio, maxRetries: 1 } as const;
   if (request.provider === 'openai') return transcribe({ ...common,
@@ -163,8 +173,12 @@ export async function transcribeCloudAudio(
   request: CloudTranscriptionRequest,
 ): Promise<NormalizedTranscriptResult> {
   const result = await runProvider(options, request);
-  const raw = (result.responses[0] as unknown as { body?: unknown } | undefined)?.body;
+  if (request.provider === 'stepfun') {
+    return result as NormalizedTranscriptResult;
+  }
+  const sdkResult = result as TranscriptionResult;
+  const raw = (sdkResult.responses[0] as unknown as { body?: unknown } | undefined)?.body;
   const providerWords = normalizedRawWords(request.provider, raw);
-  const words = providerWords.length ? providerWords : standardWords(result);
-  return { text: result.text, words, utterances: groupUtterances(words) };
+  const words = providerWords.length ? providerWords : standardWords(sdkResult);
+  return { text: sdkResult.text, words, utterances: groupUtterances(words) };
 }

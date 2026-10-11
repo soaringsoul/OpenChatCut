@@ -7,6 +7,8 @@ import { FAL_MODELS } from '../../../shared/fal-models';
 // The current value is echoed through the models channel of GET /api/keys (server-side NON_SECRET_NAMES whitelist).
 import { t } from '../../i18n/locale';
 import {
+  CODEX_LLM_ROUTE,
+  LLM_PROVIDER_PRESETS,
   isLocalLlmProvider,
   llmProviderConfigNames,
 } from '../../../shared/llm-providers';
@@ -92,6 +94,9 @@ export const SETTINGS_CATEGORIES: readonly SettingsCategory[] = [
     groups: [
       { key: 'llm', title: 'Agent 大脑',
         hint: '对话与工具调用的核心，未配置无法对话。',
+        route: routeSelect('LLM_PROVIDER', [{ value: '', label: '任务中选择模型' },
+          ...LLM_PROVIDER_PRESETS.flatMap((preset) => [{ value: preset.id, label: preset.label },
+            ...(preset.id === 'openai' ? [{ value: CODEX_LLM_ROUTE, label: 'OpenAI · Codex（ChatGPT 订阅）' }] : [])])]),
         vendors: AGENT_VENDOR_PAGES_WITH_VISION },
     ],
   },
@@ -112,6 +117,7 @@ export const SETTINGS_CATEGORIES: readonly SettingsCategory[] = [
           { value: 'image-01', label: 'MiniMax' },
           { value: 'wavespeed', label: 'WaveSpeed' },
           { value: 'byteplus', label: 'BytePlus · Seedream' },
+          { value: 'stepfun', label: 'StepFun' },
           { value: 'grok-imagine', label: 'xAI Grok Imagine' },
         ]),
         vendors: [
@@ -133,6 +139,12 @@ export const SETTINGS_CATEGORIES: readonly SettingsCategory[] = [
           ] },
           byteplusPage('image', modelText('BYTEPLUS_IMAGE_MODEL', '生图模型', 'seedream-4-5-251128',
             '测试连接后可直接选择接口返回的模型，也可以手动填写模型 ID。', true), 'BytePlus · Seedream'),
+          { key: 'image/stepfun', vendor: 'stepfun', title: 'StepFun',
+            note: '复用 Agent 大脑 → StepFun 的 API Key / Base URL，无需再填密钥。官方暂无文生视频。',
+            fields: [
+              modelText('STEPFUN_IMAGE_MODEL', '生图模型', 'step-image-edit-2',
+                '测试连接后可直接选择接口返回的模型，也可以手动填写模型 ID。', true),
+            ] },
           { key: 'image/xai', vendor: 'xai', title: 'xAI · Grok Imagine',
             note: '使用 xAI 订阅会话（SuperGrok / X Premium+，优先）或 LLM_XAI_API_KEY 生成图片。文生图：最多 4 张，1K / 2K。',
             fields: [
@@ -186,6 +198,7 @@ export const SETTINGS_CATEGORIES: readonly SettingsCategory[] = [
           { value: 'minimax', label: 'MiniMax' },
           { value: 'atlas', label: 'Atlas Cloud' },
           { value: 'sonilo', label: 'Sonilo' },
+          { value: 'stepfun', label: 'StepFun' },
         ]),
         vendors: [
           { key: 'music/mureka', vendor: 'mureka', title: 'Mureka', fields: [
@@ -200,6 +213,12 @@ export const SETTINGS_CATEGORIES: readonly SettingsCategory[] = [
             text('ATLASCLOUD_API_BASE', 'Base URL', '默认 https://api.atlascloud.ai/api/v1'),
             modelPicker('ATLASCLOUD_MUSIC_MODEL', '音乐模型', 'minimax/music-2.6', ['minimax/music-2.6']),
           ] },
+          { key: 'music/stepfun', vendor: 'stepfun', title: 'StepFun',
+            note: '复用 Agent 大脑 → StepFun 的 API Key / Base URL。文生曲 / 纯伴奏（异步任务）。',
+            fields: [
+              modelText('STEPFUN_MUSIC_MODEL', '音乐模型', 'stepaudio-3-music-preview',
+                '测试连接后可直接选择接口返回的模型，也可以手动填写模型 ID。', true),
+            ] },
           { key: 'music/sonilo', vendor: 'sonilo', title: 'Sonilo',
             note: '按成片生成：把渲染好的视频交给 Sonilo，配乐跟着画面节奏走（可选一句风格提示，不填也行）。'
               + '配乐自带授权、可商用（以条款为准）；每条音轨附 license_id 留档。'

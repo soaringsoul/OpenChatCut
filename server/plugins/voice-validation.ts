@@ -132,19 +132,25 @@ function validateAiProvider(input: VoiceRequest, provider: 'openai' | 'gemini' |
 export function validateVoiceRequest(input: VoiceRequest): ValidVoiceRequest {
   const provider = input.provider;
   if (provider !== 'elevenlabs' && provider !== 'doubao' && provider !== 'minimax'
-    && provider !== 'inworld' && provider !== 'fishaudio' && provider !== 'speechify' && !isAiProvider(provider)) {
+    && provider !== 'inworld' && provider !== 'fishaudio' && provider !== 'speechify'
+    && provider !== 'stepfun' && !isAiProvider(provider)) {
     throw new Error('unsupported voice provider');
   }
   const text = String(input.text ?? '').trim();
   const requestedVoiceId = String(input.voiceId ?? '').trim();
-  const voiceId = requestedVoiceId || (provider === 'minimax' && !input.timbreWeights?.length ? 'female-yujie' : '');
+  const voiceId = requestedVoiceId
+    || (provider === 'minimax' && !input.timbreWeights?.length ? 'female-yujie' : '')
+    || (provider === 'stepfun' ? 'zixinnansheng' : '');
   if (!text) throw new Error('text is required');
   if (!voiceId && !(provider === 'minimax' && input.timbreWeights?.length)) throw new Error('voiceId is required');
   if (provider === 'elevenlabs') validateEleven(input);
   else if (provider === 'doubao') validateDoubao(input, voiceId);
   else if (provider === 'minimax') validateMinimax(input, text);
   else if (isAiProvider(provider)) validateAiProvider(input, provider);
-  else {
+  else if (provider === 'stepfun') {
+    if (text.length > 1_000) throw new Error('StepFun TTS text must be at most 1000 characters');
+    validateMinimalProvider(input, 'StepFun');
+  } else {
     if (provider === 'inworld' && text.length > 2_000) throw new Error('Inworld TTS text must be at most 2000 characters');
     validateMinimalProvider(input, provider === 'inworld' ? 'Inworld' : provider === 'fishaudio' ? 'Fish Audio' : 'Speechify');
   }

@@ -5,7 +5,7 @@ export interface SubmitMusicArgs {
   operationId?: string;
   prompt?: string;
   name?: string;
-  provider?: 'mureka' | 'minimax' | 'atlas' | 'sonilo';
+  provider?: 'mureka' | 'minimax' | 'atlas' | 'sonilo' | 'stepfun';
   mode?: 'instrumental' | 'song' | 'prompt-song' | 'soundtrack' | 'track' | 't2m' | 'cover' | 'v2m';
   lyrics?: string;
   isInstrumental?: boolean;

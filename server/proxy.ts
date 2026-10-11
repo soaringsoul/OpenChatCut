@@ -37,6 +37,9 @@ export interface ProxyRoute {
   forceJsonContentType?: boolean;
   /** Replace upstream error bodies with one actionable message. */
   errorMessage?: (status: number, req: IncomingMessage) => string;
+  /** Validated body for a server-owned model connection. */
+  body?: Uint8Array;
+  suppressErrorDetails?: boolean;
 }
 
 export function proxyMiddleware(route: ProxyRoute): Middleware {
@@ -84,12 +87,15 @@ export function proxyMiddleware(route: ProxyRoute): Middleware {
     }, (upRes) => {
       const status = upRes.statusCode ?? 502;
       if (status >= 400 && route.errorMessage) {
-        const chunks: Buffer[] = [];
-        upRes.on('data', (chunk) => chunks.push(chunk));
-        upRes.on('end', () => {
-          const body = Buffer.concat(chunks).toString('utf8').slice(0, 2000);
-          console.warn(`[proxy] upstream ${status} for ${target.host}${basePath}${requestPath} · ${body}`);
-        });
+        if (route.suppressErrorDetails) upRes.resume();
+        else {
+          const chunks: Buffer[] = [];
+          upRes.on('data', (chunk) => chunks.push(chunk));
+          upRes.on('end', () => {
+            const body = Buffer.concat(chunks).toString('utf8').slice(0, 2000);
+            console.warn(`[proxy] upstream ${status} for ${target.host}${basePath}${requestPath} · ${body}`);
+          });
+        }
         res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
         res.end(JSON.stringify({ error: { message: route.errorMessage(status, req) } }));
         return;
@@ -111,12 +117,13 @@ export function proxyMiddleware(route: ProxyRoute): Middleware {
     upstream.on('error', (err) => {
       if (!res.headersSent) {
         res.writeHead(502, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: `upstream request failed: ${err.message}` }));
+        res.end(JSON.stringify({ error: route.suppressErrorDetails ? '模型连接失败，请检查统一模型设置' : `upstream request failed: ${err.message}` }));
       } else if (!res.writableEnded) {
         res.end();
       }
     });
     res.on('close', () => upstream.destroy());
-    req.pipe(upstream);
+    if (route.body) upstream.end(route.body);
+    else req.pipe(upstream);
   };
 }

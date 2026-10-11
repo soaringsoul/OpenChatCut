@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { registerStudioLeaveGuard } from '../app/studioWorkspace';
 import type { PlayerRef } from '@remotion/player';
 import { enqueueVisualAnalysis } from '../agent/progress/visual-analysis-jobs';
 import { useT } from '../i18n/locale';
@@ -97,6 +98,7 @@ function useEditorAutosave(projectId: string, doc: ProjectDoc): () => Promise<bo
     }
     return true;
   }, [enqueuePendingSave, projectId, t]);
+  useEffect(() => registerStudioLeaveGuard(flushBeforeLeave), [flushBeforeLeave]);
   useBrowserSaveGuards(projectId, enqueuePendingSave);
   return flushBeforeLeave;
 }

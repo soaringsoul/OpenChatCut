@@ -5,6 +5,7 @@ import { LLM_PROVIDER_PRESETS, llmProviderConfigNames } from "../shared/llm-prov
 import { MODEL_CAPABILITY_OVERRIDES_KEY } from "../shared/model-capabilities.ts";
 
 export const KEY_NAMES = [
+  "AGENT_MOTION_ROOT",
   "AGENT_IMPORT_ROOTS",
   "PROXY_URL",
   "LLM_API_KEY",
@@ -146,6 +147,11 @@ export const KEY_NAMES = [
   "WAVESPEED_IMAGE_MODEL",
   "BYTEPLUS_IMAGE_MODEL",
   "BYTEPLUS_VIDEO_MODEL",
+  "STEPFUN_IMAGE_MODEL",
+  "STEPFUN_TTS_MODEL",
+  "STEPFUN_TTS_VOICE",
+  "STEPFUN_MUSIC_MODEL",
+  "STEPFUN_TRANSCRIPTION_MODEL",
   "ELEVENLABS_TTS_MODEL",
   "OPENAI_TTS_MODEL",
   "GEMINI_TTS_MODEL",
@@ -191,6 +197,7 @@ export type KeyName = (typeof KEY_NAMES)[number];
 // not credentials). Deliberately a separate explicit list rather than derived from
 // KEY_NAMES: adding a key to the whitelist must never accidentally make it non-secret.
 export const NON_SECRET_NAMES: ReadonlySet<string> = new Set([
+  "AGENT_MOTION_ROOT",
   "AGENT_IMPORT_ROOTS",
   "PROXY_URL",
   "LLM_PROVIDER",
@@ -239,6 +246,11 @@ export const NON_SECRET_NAMES: ReadonlySet<string> = new Set([
   "WAVESPEED_IMAGE_MODEL",
   "BYTEPLUS_IMAGE_MODEL",
   "BYTEPLUS_VIDEO_MODEL",
+  "STEPFUN_IMAGE_MODEL",
+  "STEPFUN_TTS_MODEL",
+  "STEPFUN_TTS_VOICE",
+  "STEPFUN_MUSIC_MODEL",
+  "STEPFUN_TRANSCRIPTION_MODEL",
   "XAI_IMAGE_MODEL",
   "XAI_VIDEO_MODEL",
   "OFOX_VIDEO_MODEL",

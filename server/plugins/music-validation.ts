@@ -117,9 +117,28 @@ function validateAtlas(input: MusicRequest, mode: MusicMode, prompt: string, lyr
   if (input.audioFormat && !['mp3', 'wav', 'pcm'].includes(input.audioFormat)) throw new Error('Atlas audioFormat must be mp3, wav, or pcm');
 }
 
+function validateStepfun(input: MusicRequest, mode: MusicMode, prompt: string, lyrics?: string): void {
+  if (mode !== 't2m') throw new Error('stepfun mode must be t2m');
+  rejectMurekaOnly(input);
+  if (input.referenceAudioPath || input.coverFeatureId || input.lyricsOptimizer !== undefined) {
+    throw new Error('MiniMax cover and lyricsOptimizer controls are not supported by stepfun');
+  }
+  if (!prompt) throw new Error('StepFun music requires a style caption (prompt)');
+  if (prompt.length > 2000) throw new Error('StepFun prompt must be at most 2000 characters');
+  const instrumental = input.isInstrumental ?? (!lyrics);
+  if (instrumental && lyrics) throw new Error('StepFun instrumental generation cannot be combined with lyrics');
+  if (lyrics && lyrics.length > 5000) throw new Error('StepFun lyrics must be at most 5000 characters');
+  if (input.count !== undefined && input.count !== 1) throw new Error('stepfun returns exactly one result; count must be 1');
+  if (input.audioFormat && !['mp3', 'wav', 'flac', 'pcm'].includes(input.audioFormat)) {
+    throw new Error('StepFun audioFormat must be mp3, wav, flac, or pcm');
+  }
+}
+
 export function validateMusicRequest(input: MusicRequest): ValidMusicRequest {
   const provider = String(input.provider ?? 'mureka');
-  if (provider !== 'mureka' && provider !== 'minimax' && provider !== 'atlas' && provider !== 'sonilo') throw new Error('provider must be mureka, minimax, atlas, or sonilo');
+  if (provider !== 'mureka' && provider !== 'minimax' && provider !== 'atlas' && provider !== 'sonilo' && provider !== 'stepfun') {
+    throw new Error('provider must be mureka, minimax, atlas, sonilo, or stepfun');
+  }
   const inferredMode: MusicMode = provider === 'mureka' ? 'instrumental'
     : provider === 'sonilo' ? 'v2m'
       : provider === 'minimax' && (input.referenceAudioPath || input.coverFeatureId) ? 'cover' : 't2m';
@@ -136,6 +155,7 @@ export function validateMusicRequest(input: MusicRequest): ValidMusicRequest {
     if (input.audioFormat && !['mp3', 'wav', 'flac'].includes(input.audioFormat)) throw new Error('Mureka audioFormat must be mp3, wav, or flac');
     validateMurekaMode(input, mode, prompt, lyrics);
   } else if (provider === 'minimax') validateMinimax(input, mode, prompt, lyrics);
+  else if (provider === 'stepfun') validateStepfun(input, mode, prompt, lyrics);
   else validateAtlas(input, mode, prompt, lyrics);
   const name = optionalText(input.name) ?? `Music · ${(prompt || mode).slice(0, 36)}`;
   return {
@@ -144,7 +164,9 @@ export function validateMusicRequest(input: MusicRequest): ValidMusicRequest {
       ? mode === 'instrumental'
       : provider === 'sonilo'
         ? true
-        : input.isInstrumental ?? (mode === 't2m' && !lyrics && !input.lyricsOptimizer),
+        : provider === 'stepfun'
+          ? input.isInstrumental ?? !lyrics
+          : input.isInstrumental ?? (mode === 't2m' && !lyrics && !input.lyricsOptimizer),
     lyricsOptimizer: provider === 'minimax' && input.lyricsOptimizer === true,
     sampleRate: input.sampleRate ?? 44_100,
     bitrate: input.bitrate ?? 256_000,

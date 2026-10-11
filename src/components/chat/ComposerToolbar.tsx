@@ -1,6 +1,6 @@
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { useT } from '../../i18n/locale';
-import { theme } from '../../theme';
+import { accentOutline, theme } from '../../theme';
 import { Icon, type IconName } from '../icons';
 import type { ChatMode } from './ChatComposer';
 import codexPng from '../../../assets/vendor-icons/codex-color.png';
@@ -107,12 +107,12 @@ export function ComposerToolbar({
       </div>
       {running ? (
         <button title={t('停止')} onClick={onStop} className="cc-chat-send-btn"
-          style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: theme.accent, cursor: 'pointer', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-          <span style={{ width: 10, height: 10, background: theme.onAccent, borderRadius: 2 }} />
+          style={{ width: 28, height: 28, borderRadius: '50%', ...accentOutline, cursor: 'pointer', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+          <span style={{ width: 10, height: 10, background: theme.accent, borderRadius: 2 }} />
         </button>
       ) : (
         <button title={sendTitle} onClick={onSubmit} disabled={!canSend} className="cc-chat-send-btn"
-          style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: canSend ? theme.accent : theme.border, color: canSend ? theme.onAccent : theme.textDim, cursor: canSend ? 'pointer' : 'default', display: 'grid', placeItems: 'center', lineHeight: 0, flexShrink: 0 }}>
+          style={{ width: 28, height: 28, borderRadius: '50%', ...(canSend ? accentOutline : { border: 'none', background: theme.border, color: theme.textDim }), cursor: canSend ? 'pointer' : 'default', display: 'grid', placeItems: 'center', lineHeight: 0, flexShrink: 0 }}>
           <Icon name="arrowUp" size={16} strokeWidth={2.2} />
         </button>
       )}

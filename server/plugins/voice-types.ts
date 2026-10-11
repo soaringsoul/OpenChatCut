@@ -1,7 +1,7 @@
 import type { MinimaxLanguageBoost } from '../../shared/media-provider-params.ts';
 
 export type VoiceProvider =
-  | 'elevenlabs' | 'doubao' | 'minimax' | 'inworld' | 'fishaudio' | 'speechify'
+  | 'elevenlabs' | 'doubao' | 'minimax' | 'inworld' | 'fishaudio' | 'speechify' | 'stepfun'
   | 'openai' | 'gemini' | 'mistral' | 'cartesia';
 export type MinimaxVoiceFormat = 'mp3' | 'pcm' | 'flac' | 'wav' | 'pcmu_raw' | 'pcmu_wav' | 'opus';
 export type VoiceEffect = 'spacious_echo' | 'auditorium_echo' | 'lofi_telephone' | 'robotic';
@@ -40,6 +40,10 @@ export interface VoiceOptions {
   speechifyBaseUrl: string;
   speechifyApiKey: string;
   speechifyModel: string;
+  stepfunBaseUrl: string;
+  stepfunApiKey: string;
+  stepfunModel: string;
+  stepfunDefaultVoice: string;
   ai: AiVoiceOptions;
 }
 

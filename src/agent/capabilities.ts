@@ -65,6 +65,7 @@ const CAP_PROVIDERS: Partial<Record<CapabilityKey, ProviderRow[]>> = {
     { label: 'MiniMax', arg: 'image-01', argKey: 'model', need: [['MINIMAX_API_KEY']] },
     { label: 'WaveSpeed', arg: 'wavespeed', argKey: 'model', need: [['WAVESPEED_API_KEY']] },
     { label: 'BytePlus', arg: 'byteplus', argKey: 'model', need: [['BYTEPLUS_API_KEY']] },
+    { label: 'StepFun', arg: 'stepfun', argKey: 'model', need: [['LLM_STEPFUN_API_KEY']] },
     { label: 'xAI Grok', arg: 'grok-imagine', argKey: 'model', need: [['LLM_XAI_OAUTH_API_KEY'], ['LLM_XAI_API_KEY']] },
   ],
   voice: [
@@ -74,6 +75,7 @@ const CAP_PROVIDERS: Partial<Record<CapabilityKey, ProviderRow[]>> = {
     { label: 'Inworld', arg: 'inworld', argKey: 'provider', need: [['INWORLD_TTS_API_KEY']] },
     { label: 'Fish Audio', arg: 'fishaudio', argKey: 'provider', need: [['FISHAUDIO_TTS_API_KEY']] },
     { label: 'Speechify', arg: 'speechify', argKey: 'provider', need: [['SPEECHIFY_TTS_API_KEY']] },
+    { label: 'StepFun', arg: 'stepfun', argKey: 'provider', need: [['LLM_STEPFUN_API_KEY']] },
     { label: 'OpenAI', arg: 'openai', argKey: 'provider', need: [['OPENAI_API_KEY']] },
     { label: 'Gemini', arg: 'gemini', argKey: 'provider', need: [['GEMINI_API_KEY']] },
     { label: 'Mistral Voxtral', arg: 'mistral', argKey: 'provider', need: [['LLM_MISTRAL_API_KEY']] },
@@ -93,6 +95,7 @@ const CAP_PROVIDERS: Partial<Record<CapabilityKey, ProviderRow[]>> = {
     { label: 'MiniMax', arg: 'minimax', argKey: 'provider', need: [['MINIMAX_API_KEY']] },
     { label: 'Atlas Cloud', arg: 'atlas', argKey: 'provider', need: [['ATLASCLOUD_API_KEY']] },
     { label: 'Sonilo', arg: 'sonilo', argKey: 'provider', need: [['SONILO_API_KEY']] },
+    { label: 'StepFun', arg: 'stepfun', argKey: 'provider', need: [['LLM_STEPFUN_API_KEY']] },
   ],
   sound: [
     { label: 'ElevenLabs', arg: 'elevenlabs', argKey: 'provider', need: [['ELEVENLABS_API_KEY']] },
@@ -113,6 +116,7 @@ const CAP_PROVIDERS: Partial<Record<CapabilityKey, ProviderRow[]>> = {
     { label: 'Groq', arg: 'groq', argKey: 'provider', need: [['GROQ_API_KEY']] },
     { label: 'ElevenLabs Scribe', arg: 'elevenlabs', argKey: 'provider', need: [['ELEVENLABS_API_KEY']] },
     { label: 'Cartesia', arg: 'cartesia', argKey: 'provider', need: [['CARTESIA_API_KEY']] },
+    { label: 'StepFun', arg: 'stepfun', argKey: 'provider', need: [['LLM_STEPFUN_API_KEY']] },
   ],
 };
 

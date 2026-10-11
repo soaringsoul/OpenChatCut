@@ -8,6 +8,7 @@ export type VoiceProvider =
   | 'inworld'
   | 'fishaudio'
   | 'speechify'
+  | 'stepfun'
   | 'openai'
   | 'gemini'
   | 'mistral'

@@ -135,6 +135,7 @@ export interface ExportDialogModel {
   disabled: boolean;
   qualityMode: QualityMode;
   setQualityMode: (mode: QualityMode) => void;
+  projectId: string;
 }
 
 function useVideoSettings(state: TimelineState, qualityMode: QualityMode): ExportVideoSettings {
@@ -230,6 +231,6 @@ export function useExportDialogModel({ state, project, projectId, projectName, e
   return {
     tab, setTab, video, subtitles, nleFormat, setNleFormat, includeMg, setIncludeMg,
     mgItems, base, outputName: name, videoSummary, workflow, disabled,
-    qualityMode, setQualityMode,
+    qualityMode, setQualityMode, projectId,
   };
 }

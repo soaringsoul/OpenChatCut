@@ -3,7 +3,7 @@
 // dismissible (localStorage) — never blocks the dashboard.
 import { useEffect, useState } from 'react';
 import { useT } from '../../i18n/locale';
-import { theme } from '../../theme';
+import { accentOutline, theme } from '../../theme';
 import { loadMigrationStatus, STORAGE_BANNER_DISMISS_KEY, STORAGE_MIGRATED_EVENT } from './storageMigration';
 
 const bannerStyle: React.CSSProperties = {
@@ -14,7 +14,7 @@ const bannerStyle: React.CSSProperties = {
 };
 const bannerText: React.CSSProperties = { flex: 1 };
 const primaryBtn: React.CSSProperties = {
-  background: theme.accent, border: 'none', color: theme.onAccent, cursor: 'pointer',
+  ...accentOutline, cursor: 'pointer',
   fontSize: 12.5, padding: '6px 14px', borderRadius: 4, whiteSpace: 'nowrap',
 };
 const dismissBtn: React.CSSProperties = {

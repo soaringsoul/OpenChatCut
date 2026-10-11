@@ -17,10 +17,12 @@ import {
   callGeminiProvider,
   callGrokImageProvider,
   callMinimaxProvider,
+  callStepfunImageProvider,
   callWaveSpeedProvider,
   imageMimeType,
   imageProviderError,
   localImageAssetPath,
+  stepfunImageSize,
   type ProviderImage,
 } from './image-provider-clients.ts';
 // Proxy-aware fetch: attaches the configured outbound proxy (keystore
@@ -52,6 +54,9 @@ interface ImagePluginOptions {
   byteplusBaseUrl: string;
   byteplusApiKey: string;
   byteplusModel: string;
+  stepfunBaseUrl: string;
+  stepfunApiKey: string;
+  stepfunModel: string;
   xaiBaseUrl: string;
   xaiApiKey: string;
   xaiImageModel: string;
@@ -80,7 +85,7 @@ interface ImageRequest {
 }
 
 export interface ValidImageRequest {
-  model: 'gpt-image-2' | 'nano-banana' | 'image-01' | 'wavespeed' | 'byteplus' | 'grok-imagine' | 'fal';
+  model: 'gpt-image-2' | 'nano-banana' | 'image-01' | 'wavespeed' | 'byteplus' | 'stepfun' | 'grok-imagine' | 'fal';
   falModel?: string;
   falInput?: FalCatalogInput;
   prompt: string;
@@ -109,6 +114,7 @@ function customDimensions(input: ImageRequest, model: ValidImageRequest['model']
   if (input.aspectRatio != null) throw new Error('custom width/height cannot be combined with aspectRatio');
   if (model === 'nano-banana') throw new Error('custom width/height are not supported by nano-banana');
   if (model === 'grok-imagine') throw new Error('custom width/height are not supported by grok-imagine');
+  if (model === 'stepfun') throw new Error('custom width/height are not supported by stepfun');
   if (!Number.isInteger(width) || !Number.isInteger(height)) throw new Error('width and height must be integers');
   const [minimum, maximum, divisor] = model === 'image-01' ? [512, 2048, 8] : [512, 3840, 16];
   if (width < minimum || width > maximum || height < minimum || height > maximum) {
@@ -164,7 +170,8 @@ export function validateImageRequest(input: ImageRequest): ValidImageRequest {
       referencePaths: input.referencePaths ?? [], aspectRatio: input.aspectRatio ?? '16:9',
       imageSize: input.imageSize ?? '1K', quality: 'high', outputFormat: 'png' };
   }
-  if (model !== 'gpt-image-2' && model !== 'nano-banana' && model !== 'image-01' && model !== 'wavespeed' && model !== 'byteplus' && model !== 'grok-imagine') {
+  if (model !== 'gpt-image-2' && model !== 'nano-banana' && model !== 'image-01' && model !== 'wavespeed'
+    && model !== 'byteplus' && model !== 'stepfun' && model !== 'grok-imagine') {
     throw new Error(`unsupported model ${model}`);
   }
   const prompt = String(input.prompt ?? '').trim();
@@ -180,12 +187,15 @@ export function validateImageRequest(input: ImageRequest): ValidImageRequest {
   if (!QUALITIES.has(quality)) throw new Error(`unsupported quality ${quality}`);
   const referencePaths = input.referencePaths ?? [];
   const referenceLimit = model === 'nano-banana' ? 14 : model === 'gpt-image-2' ? 16 : model === 'image-01' ? 1 : 0;
-  // wavespeed and byteplus (Seedream) are text-to-image only in this integration; no reference-image support yet.
+  // wavespeed / byteplus / stepfun are text-to-image only in this integration; no reference-image support yet.
   if (referencePaths.length > referenceLimit) {
     throw new Error(`too many reference images for ${model}`);
   }
   rejectForeignImageOptions(input, model);
-  if (model === 'image-01') {
+  if (model === 'stepfun') {
+    if (prompt.length > 512) throw new Error('stepfun prompt must be at most 512 characters');
+    if (count !== 1) throw new Error('stepfun supports exactly one image per call');
+  } else if (model === 'image-01') {
     if (prompt.length > 1500) throw new Error('image-01 prompt must be at most 1500 characters');
     if (count > 9) throw new Error('image-01 supports at most 9 images per call');
     if (aspectRatio === '4:5' || aspectRatio === '5:4') throw new Error(`image-01 does not support aspect ratio ${aspectRatio}`);
@@ -393,7 +403,13 @@ export function imageGenerationPlugin(options: ImagePluginOptions): Plugin {
           } = input;
           const [width, height] = input.width != null && input.height != null
             ? [input.width, input.height]
-            : model === 'fal' ? [0, 0] : dimensions(aspectRatio!, imageSize);
+            : model === 'fal' ? [0, 0]
+              : model === 'stepfun' ? (() => {
+                // StepFun size tokens are height×width.
+                const [sh, sw] = stepfunImageSize(aspectRatio).split('x').map(Number);
+                return [sw, sh] as [number, number];
+              })()
+                : dimensions(aspectRatio!, imageSize);
           let images: ProviderImage[];
           if (model === 'fal') {
             images = await generateFalCatalogImage(input.falInput!);
@@ -420,6 +436,11 @@ export function imageGenerationPlugin(options: ImagePluginOptions): Plugin {
             if (!options.byteplusApiKey) throw new Error('BytePlus is not configured. Set BYTEPLUS_API_KEY in .env.local.');
             images = await callByteplusImageProvider(options.byteplusBaseUrl, options.byteplusApiKey, options.byteplusModel, {
               prompt, count, width, height,
+            });
+          } else if (model === 'stepfun') {
+            if (!options.stepfunApiKey) throw new Error('StepFun is not configured. Set LLM_STEPFUN_API_KEY in .env.local or 设置面板.');
+            images = await callStepfunImageProvider(options.stepfunBaseUrl, options.stepfunApiKey, options.stepfunModel, {
+              prompt, count, aspectRatio,
             });
           } else if (model === 'grok-imagine') {
             images = await callGrokImageProvider(options.xaiBaseUrl, options.xaiApiKey, options.xaiImageModel, {

@@ -1,8 +1,7 @@
 import type { CSSProperties } from 'react';
-import { theme, themeAlpha } from '../../theme';
+import { accentOutline, theme, themeAlpha } from '../../theme';
 import { ON } from './settingsVendorPane.styles';
 
-const TREE_WIDTH = 200;
 const VENDOR_COL_WIDTH = 185;
 
 export function navRowStyle(active: boolean, hovered: boolean): CSSProperties {
@@ -22,6 +21,14 @@ export function dot(on: boolean): CSSProperties {
   };
 }
 
+export const pageShell: CSSProperties = {
+  position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: theme.bg,
+  zIndex: 1, fontFamily: 'Geist, system-ui, -apple-system, sans-serif',
+};
+export const pagePanel: CSSProperties = {
+  flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column',
+  background: theme.panel, color: theme.text, overflow: 'hidden',
+};
 export const overlay: CSSProperties = {
   position: 'fixed', inset: 0, background: themeAlpha.shadow(0.62), display: 'grid', placeItems: 'center',
   zIndex: 200, padding: 24, fontFamily: 'Geist, system-ui, -apple-system, sans-serif',
@@ -36,28 +43,39 @@ export const head: CSSProperties = {
   padding: '13px 16px 13px 20px', borderBottom: `0.5px solid ${theme.border}`,
 };
 export const bodyRow: CSSProperties = { display: 'flex', flex: 1, minHeight: 0 };
-export const sidebar: CSSProperties = {
-  width: TREE_WIDTH, flex: '0 0 auto', display: 'flex', flexDirection: 'column',
-  borderRight: `0.5px solid ${theme.border}`, overflow: 'hidden',
+export const tabBar: CSSProperties = {
+  flex: '0 0 auto', borderBottom: `0.5px solid ${theme.border}`,
 };
-export const treeScroll: CSSProperties = {
-  flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex',
-  flexDirection: 'column', gap: 2, padding: '10px 8px',
+export const tabRow: CSSProperties = {
+  display: 'flex', gap: 2, padding: '0 14px', overflowX: 'auto',
+  borderBottom: `0.5px solid ${theme.border}`,
 };
-export const catRow: CSSProperties = {
-  font: 'inherit', fontSize: 12.5, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
-  width: '100%', padding: '7px 9px 7px 7px', borderRadius: 6, cursor: 'pointer',
-  border: 'none', background: 'transparent', color: theme.text,
+export function categoryTabStyle(active: boolean, hovered: boolean): CSSProperties {
+  return {
+    font: 'inherit', fontSize: 12.5, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
+    flex: '0 0 auto', padding: '9px 10px 8px', cursor: 'pointer', whiteSpace: 'nowrap',
+    border: 'none', borderBottom: `2px solid ${active ? theme.accent : 'transparent'}`,
+    background: hovered && !active ? theme.panelAlt : 'transparent',
+    color: active ? theme.text : theme.textDim,
+  };
+}
+export const subTabRow: CSSProperties = {
+  display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', minHeight: 36, overflowX: 'auto',
 };
-export const chevronBox: CSSProperties = {
-  display: 'inline-flex', color: theme.textDim, transition: 'transform 0.15s', flex: '0 0 auto',
+export function subTabStyle(active: boolean, hovered: boolean): CSSProperties {
+  return {
+    font: 'inherit', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6, flex: '0 0 auto',
+    padding: '4px 10px', borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap',
+    border: `0.5px solid ${active ? theme.accent : 'transparent'}`,
+    background: active || hovered ? theme.panelAlt : 'transparent',
+    color: active ? theme.text : theme.textDim,
+  };
+}
+export const tabNote: CSSProperties = {
+  marginLeft: 'auto', paddingLeft: 12, fontSize: 10.5, color: theme.textDim, whiteSpace: 'nowrap',
 };
 export const navLabel: CSSProperties = {
   flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-};
-export const sidebarNote: CSSProperties = {
-  margin: 0, padding: '10px 12px', fontSize: 10.5, lineHeight: 1.6,
-  color: theme.textDim, borderTop: `0.5px solid ${theme.border}`,
 };
 export const vendorCol: CSSProperties = {
   width: VENDOR_COL_WIDTH, flex: '0 0 auto', minWidth: 0, minHeight: 0, overflowY: 'auto',
@@ -91,8 +109,7 @@ export const btnGhost: CSSProperties = {
   border: `0.5px solid ${theme.border}`, borderRadius: 4, padding: '6px 13px', cursor: 'pointer',
 };
 export const btnPrimary: CSSProperties = {
-  font: 'inherit', fontSize: 12.5, fontWeight: 600, background: theme.accent,
-  color: theme.onAccent, border: 'none', borderRadius: 4, padding: '6px 16px',
+  font: 'inherit', fontSize: 12.5, fontWeight: 600, ...accentOutline, borderRadius: 4, padding: '6px 16px',
 };
 export const code: CSSProperties = {
   fontFamily: 'ui-monospace, monospace', fontSize: 10,

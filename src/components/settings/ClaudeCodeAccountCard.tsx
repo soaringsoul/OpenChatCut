@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ClaudeCodeAgentStatus } from '../../../shared/claude-code-agent';
 import { useT } from '../../i18n/locale';
-import { theme, themeAlpha } from '../../theme';
+import { accentOutline, theme, themeAlpha } from '../../theme';
 import { Icon } from '../icons';
 import type { ClaudeCodeSettingsController } from './useClaudeCodeSettings';
 
@@ -122,11 +122,10 @@ function ActionRow({ state, controller, onLoadModels }: {
 function ActionButton({ children, onClick, disabled = false, primary = false }: {
   children: ReactNode; onClick: () => void; disabled?: boolean; primary?: boolean;
 }) {
-  const color = primary ? theme.onAccent : theme.text;
-  const background = primary ? theme.accent : 'transparent';
+  const color = primary ? accentOutline.color : theme.text;
   return (
     <button type="button" onClick={onClick} disabled={disabled}
-      style={{ ...button, color, background, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
+      style={{ ...button, ...(primary ? accentOutline : {}), color, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
       {children}
     </button>
   );

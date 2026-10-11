@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { theme, themeAlpha } from '../theme';
+import { accentOutline, theme, themeAlpha } from '../theme';
 import { Icon } from './icons';
 import type { ProjectDoc } from '../editor/types';
 import { listVersions, saveVersion, deleteVersion, type ProjectVersion } from '../persist/versionStore';
@@ -124,7 +124,7 @@ const ghostBtn: React.CSSProperties = {
     borderRadius: 4, padding: '5px 12px', fontSize: 12.5, cursor: 'pointer', whiteSpace: 'nowrap',
 };
 const primaryBtn: React.CSSProperties = {
-  background: theme.accent, border: 'none', color: theme.onAccent, borderRadius: 4,
+  ...accentOutline, borderRadius: 4,
   padding: '7px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
 };
 const textInput: React.CSSProperties = {

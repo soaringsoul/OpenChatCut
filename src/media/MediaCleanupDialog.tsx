@@ -1,7 +1,7 @@
 // "Clean Assets" panel: scan after opening - first clear the orphan project documents (smoke/old test residue),
 // Then list the uploaded files that are not referenced by all projects, check and delete them in batches (disk + IDB cache).
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { theme, themeAlpha } from '../theme';
+import { accentOutline, theme, themeAlpha } from '../theme';
 import { useT } from '../i18n/locale';
 import { Icon } from '../components/icons';
 import { scanUnreferenced, deleteUploadFile, type UploadFileInfo } from '../persist/mediaCleanup';
@@ -125,6 +125,6 @@ const row: React.CSSProperties = {
 const cell: React.CSSProperties = { color: theme.textDim, fontSize: 11.5, fontVariantNumeric: 'tabular-nums', flexShrink: 0, width: 64, textAlign: 'right' };
 const miniBtn: React.CSSProperties = { background: 'none', border: 'none', color: theme.textDim, cursor: 'pointer', fontSize: 13, padding: '2px 6px', borderRadius: 5 };
 const dangerBtn: React.CSSProperties = {
-  background: theme.accent, border: 'none', color: theme.onAccent, cursor: 'pointer',
+  ...accentOutline, cursor: 'pointer',
   fontSize: 12.5, padding: '6px 14px', borderRadius: 4, flexShrink: 0,
 };

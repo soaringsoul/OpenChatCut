@@ -5,7 +5,7 @@ import type {
   CodexAgentStatus, CodexLoginStartResponse,
 } from '../../../shared/codex-agent';
 import { useT } from '../../i18n/locale';
-import { theme, themeAlpha } from '../../theme';
+import { accentOutline, theme, themeAlpha } from '../../theme';
 import { Icon } from '../icons';
 import {
   safeHttpsUrl, type CodexSettingsController,
@@ -30,17 +30,28 @@ function accountState(controller: CodexSettingsController): AccountState {
 export function CodexAccountCard({ controller }: {
   controller: CodexSettingsController;
 }) {
+  const t = useT();
   const state = accountState(controller);
+  const [loadedNotice, setLoadedNotice] = useState<string | null>(null);
+  const loadModels = async () => {
+    setLoadedNotice(null);
+    const models = await controller.discoverModels();
+    if (models.length) {
+      setLoadedNotice(t('已读取 {count} 个模型：{names}。可在下方「选择模型」中切换。', {
+        count: String(models.length), names: models.slice(0, 4).map((model) => model.label).join('、') + (models.length > 4 ? '…' : ''),
+      }));
+    } else setLoadedNotice(t('Codex 没有返回可用模型，请确认当前 ChatGPT 套餐支持 Codex。'));
+  };
   return (
     <section style={card} aria-live="polite">
       <StatusSummary state={state} controller={controller} />
       {state === 'pending' && <LoginDetails login={controller.login} />}
-      <ActionRow state={state} controller={controller}
-        onLoadModels={() => { void controller.discoverModels(); }} />
+      <ActionRow state={state} controller={controller} onLoadModels={() => { void loadModels(); }} />
       {state !== 'error' && (controller.error ?? controller.status?.error) && (
         <div role="alert" style={errorText}>{controller.error ?? controller.status?.error}</div>
       )}
       {state === 'signed-in' && controller.modelError && <div role="alert" style={errorText}>{controller.modelError}</div>}
+      {state === 'signed-in' && !controller.modelError && !controller.modelBusy && loadedNotice && <div role="status" style={noticeText}>{loadedNotice}</div>}
     </section>
   );
 }
@@ -174,11 +185,10 @@ function ActionRow({ state, controller, onLoadModels }: {
 function ActionButton({ children, onClick, disabled = false, primary = false, danger = false }: {
   children: ReactNode; onClick: () => void; disabled?: boolean; primary?: boolean; danger?: boolean;
 }) {
-  const color = danger ? theme.danger : primary ? theme.onAccent : theme.text;
-  const background = primary ? theme.accent : 'transparent';
+  const color = danger ? theme.danger : primary ? accentOutline.color : theme.text;
   return (
     <button type="button" onClick={onClick} disabled={disabled}
-      style={{ ...button, color, background, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
+      style={{ ...button, ...(primary ? accentOutline : {}), color, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
       {children}
     </button>
   );
@@ -249,3 +259,4 @@ const errorText: React.CSSProperties = {
   paddingTop: 7, borderTop: `0.5px solid ${theme.border}`, color: theme.danger,
   fontSize: 10.5, lineHeight: 1.45,
 };
+const noticeText: React.CSSProperties = { ...errorText, color: theme.success };

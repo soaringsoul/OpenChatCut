@@ -9,6 +9,7 @@ import { theme } from '../theme';
 import { setMediaAssetDrag } from './drag';
 import { assetIdsFromFolderDrop } from './folderDrop';
 import { durationLabel, mediaRatioLabel } from './mediaPoolFormat';
+import { studioSourceLabel } from './studioSource';
 import { MgThumb } from './MgThumb';
 import { usePreviewMediaSource } from './previewMedia';
 import { assetCanTranscribe } from '../transcript/transcribe-jobs';
@@ -134,6 +135,8 @@ function previewable(asset: MediaAsset): boolean {
 
 export const MediaAssetCard = memo(function MediaAssetCard(props: MediaAssetCardProps) {
   const { asset, missing, onFocusChange, onPointerChange, view } = props;
+  const t = useT();
+  const source = studioSourceLabel(asset.props);
   return (
     <div
       data-cc-media-asset-id={asset.id}
@@ -188,6 +191,7 @@ export const MediaAssetCard = memo(function MediaAssetCard(props: MediaAssetCard
     >
       <AssetThumbArea {...props} />
       <button className="cc-asset-name" title={asset.name} tabIndex={-1}>{asset.name}</button>
+      {source ? <span className="cc-asset-studio-source" title={source}>{t('素材库 · 固定版本')}</span> : null}
       {!missing && props.musicAnalysis && props.musicAnalysis.state !== 'unavailable' && <MusicAnalysisBadge asset={asset} state={props.musicAnalysis} />}
     </div>
   );

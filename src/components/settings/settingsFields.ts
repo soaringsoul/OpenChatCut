@@ -53,6 +53,7 @@ export interface SettingsCategory {
 
 export interface KeyState { configured: boolean; source: 'env' | 'runtime' | 'none'; }
 export interface KeyStatusResponse {
+  revision?: string;
   keys: Record<string, KeyState>;
   caps: Record<string, boolean>;
   models: Record<string, string>;

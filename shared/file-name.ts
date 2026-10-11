@@ -11,6 +11,32 @@ function replaceControlCharacters(value: string): string {
   }).join('');
 }
 
+function entryBaseName(name: string): string {
+  const trimmed = name.trim();
+  const separator = Math.max(trimmed.lastIndexOf('/'), trimmed.lastIndexOf('\\'));
+  return separator >= 0 ? trimmed.slice(separator + 1) : trimmed;
+}
+
+/**
+ * Finder writes AppleDouble sidecars (`._clip.mp4`) and `.DS_Store` next to
+ * real media on exFAT/FAT volumes. Those names still end in `.mp4`, so a
+ * naive extension check imports them and compatibility processing fails.
+ */
+export function isIgnoredImportName(name: string): boolean {
+  const base = entryBaseName(name);
+  if (!base) return false;
+  if (base === '.' || base === '..') return true;
+  const lower = base.toLowerCase();
+  return base.startsWith('.')
+    || lower === 'thumbs.db'
+    || lower === 'desktop.ini';
+}
+
+export function isIgnoredImportDirectoryName(name: string): boolean {
+  const base = entryBaseName(name);
+  return base === '__MACOSX' || isIgnoredImportName(base);
+}
+
 /** Preserve Unicode while replacing characters forbidden by common filesystems. */
 export function sanitizeFileName(value: string, fallback: string): string {
   return replaceControlCharacters(value)

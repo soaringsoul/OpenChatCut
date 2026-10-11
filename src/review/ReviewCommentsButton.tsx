@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperti
 import { Icon } from '../components/icons';
 import type { TimelineItem, TimelineState } from '../editor/types';
 import { useT } from '../i18n/locale';
-import { theme, themeAlpha } from '../theme';
+import { accentOutline, theme, themeAlpha } from '../theme';
 import {
   appendReviewReply,
   createReviewComment,
@@ -296,8 +296,7 @@ const textarea: CSSProperties = {
   color: theme.text, padding: '7px 8px', font: 'inherit', fontSize: 11, outline: 'none',
 };
 const primaryButton: CSSProperties = {
-  border: 'none', borderRadius: 4, padding: '5px 9px', background: theme.accent,
-  color: theme.onAccent, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+  ...accentOutline, borderRadius: 4, padding: '5px 9px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
 };
 const smallButton: CSSProperties = {
   border: `0.5px solid ${theme.border}`, borderRadius: 4, padding: '3px 7px',

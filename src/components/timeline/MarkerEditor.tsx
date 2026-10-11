@@ -1,7 +1,7 @@
 // Mark annotation editing pop-up window (moved verbatim from Timeline.tsx): Click the ruler pin to open - annotation textarea +
 // 8 color circle + duration seconds input (0=point, >0=interval bar) + delete/complete. Edit and write (updateMarker straight off),
 // "Done" just closes the window.
-import { theme, themeAlpha } from '../../theme';
+import { accentOutline, theme, themeAlpha } from '../../theme';
 import { MARKER_HEX, type Marker, type MarkerColor } from '../../editor/types';
 import type { EditorCommands } from '../../editor/store';
 import { useT } from '../../i18n/locale';
@@ -42,7 +42,7 @@ export function MarkerEditor({ editing, fps, commands, onClose }: MarkerEditorPr
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <button onClick={() => { commands.removeMarker(editing.id); onClose(); }} style={{ ...toolBtn, color: theme.accent, fontSize: 12 }}>{t('删除')}</button>
         <span style={{ flex: 1 }} />
-        <button onClick={onClose} style={{ background: theme.accent, border: 'none', borderRadius: 6, color: theme.onAccent, cursor: 'pointer', fontSize: 12, padding: '4px 12px' }}>{t('完成')}</button>
+        <button onClick={onClose} style={{ ...accentOutline, borderRadius: 6, cursor: 'pointer', fontSize: 12, padding: '4px 12px' }}>{t('完成')}</button>
       </div>
     </div>
   );

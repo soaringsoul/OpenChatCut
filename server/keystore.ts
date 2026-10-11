@@ -4,6 +4,7 @@
 // browser sees booleans only (keyStatus / caps). NON_SECRET_NAMES allows model ids
 // and vendor routing in keyStatus().models so the settings UI can edit them.
 import { readFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { atomicWriteFile } from "./plugins/project-store-durable.ts";
 import { AI_SDK_BASE_URL_FORMAT, resolveLlmBaseUrl } from "./llm-config.ts";
 import { decodePersistedEnvValue, mergeEnvText } from "./env-text.ts";
@@ -153,6 +154,7 @@ export function computeCaps(): Caps {
       has("MINIMAX_API_KEY") ||
       has("WAVESPEED_API_KEY") ||
       has("BYTEPLUS_API_KEY") ||
+      has("LLM_STEPFUN_API_KEY") ||
       has("FAL_KEY"),
     voice:
       (has("DOUBAO_TTS_APP_ID") && has("DOUBAO_TTS_ACCESS_KEY")) ||
@@ -161,6 +163,7 @@ export function computeCaps(): Caps {
       has("INWORLD_TTS_API_KEY") ||
       has("FISHAUDIO_TTS_API_KEY") ||
       has("SPEECHIFY_TTS_API_KEY") ||
+      has("LLM_STEPFUN_API_KEY") ||
       (getKey("PREFERRED_VOICE_VENDOR") === "openai" && has("OPENAI_API_KEY")) ||
       (getKey("PREFERRED_VOICE_VENDOR") === "gemini" && has("GEMINI_API_KEY")) ||
       (getKey("PREFERRED_VOICE_VENDOR") === "mistral" && has("LLM_MISTRAL_API_KEY")) ||
@@ -168,7 +171,8 @@ export function computeCaps(): Caps {
     video:
       has("SEEDANCE_API_KEY") || has("KLING_API_KEY") || has("MINIMAX_API_KEY") || has("BYTEPLUS_API_KEY")
       || has("LLM_OFOX_API_KEY") || has("FAL_KEY"),
-    music: has("MUREKA_API_KEY") || has("MINIMAX_API_KEY") || has("ATLASCLOUD_API_KEY") || has("SONILO_API_KEY"),
+    music: has("MUREKA_API_KEY") || has("MINIMAX_API_KEY") || has("ATLASCLOUD_API_KEY") || has("SONILO_API_KEY")
+      || has("LLM_STEPFUN_API_KEY"),
     sound: has("ELEVENLABS_API_KEY") || has("SONILO_API_KEY"),
     stock:
       has("PEXELS_API_KEY") ||
@@ -184,7 +188,8 @@ export function computeCaps(): Caps {
       (getKey("PREFERRED_TRANSCRIPTION_PROVIDER") === "deepgram" && has("DEEPGRAM_API_KEY")) ||
       (getKey("PREFERRED_TRANSCRIPTION_PROVIDER") === "groq" && has("GROQ_API_KEY")) ||
       (getKey("PREFERRED_TRANSCRIPTION_PROVIDER") === "elevenlabs" && has("ELEVENLABS_API_KEY")) ||
-      (getKey("PREFERRED_TRANSCRIPTION_PROVIDER") === "cartesia" && has("CARTESIA_API_KEY")),
+      (getKey("PREFERRED_TRANSCRIPTION_PROVIDER") === "cartesia" && has("CARTESIA_API_KEY")) ||
+      (getKey("PREFERRED_TRANSCRIPTION_PROVIDER") === "stepfun" && has("LLM_STEPFUN_API_KEY")),
     sandbox: has("E2B_API_KEY"),
     web: has("FIRECRAWL_API_KEY"),
     storage:
@@ -205,7 +210,12 @@ export interface KeyStatus {
   keys: Record<string, KeyState>;
   caps: Caps;
   models: Record<string, string>;
+  revision: string;
 }
+const revisionBoot = randomUUID();
+let revisionNumber = 0;
+let saveTail: Promise<void> = Promise.resolve();
+export function keyRevision(): string { return `${revisionBoot}:${revisionNumber}`; }
 
 /** Browser-facing status. SECURITY INVARIANT: a SECRET key's value (any name not in
  * NON_SECRET_NAMES) NEVER appears in this (or any) response — secrets surface as
@@ -222,12 +232,21 @@ export function keyStatus(): KeyStatus {
     };
     if (NON_SECRET_NAMES.has(name)) models[name] = getKey(name);
   }
-  return { keys, caps: computeCaps(), models };
+  return { keys, caps: computeCaps(), models, revision: keyRevision() };
 }
 
 /** Apply key edits from the settings UI: validate, update memory, persist to .env.local.
  * Empty value clears a key. Values containing newlines are rejected. Unknown names ignored. */
-export async function setKeys(patch: Record<string, unknown>): Promise<void> {
+export function setKeys(patch: Record<string, unknown>, expectedRevision?: string): Promise<void> {
+  const save = saveTail.then(async () => {
+    if (expectedRevision && expectedRevision !== keyRevision()) throw new Error('配置已被其他窗口修改，请重新打开设置后保存');
+    await saveKeys(patch);
+  });
+  saveTail = save.catch(() => {});
+  return save;
+}
+
+async function saveKeys(patch: Record<string, unknown>): Promise<void> {
   const clean = new Map<string, string>();
   for (const [name, raw] of Object.entries(patch)) {
     if (!SETTABLE.has(name)) continue; // whitelist
@@ -259,4 +278,5 @@ export async function setKeys(patch: Record<string, unknown>): Promise<void> {
     } // now a runtime value
     else store.delete(name);
   }
+  revisionNumber += 1;
 }

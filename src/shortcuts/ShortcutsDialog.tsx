@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { theme, themeAlpha } from '../theme';
+import { accentOutline, theme, themeAlpha } from '../theme';
 import { getLocale, localizedCatalogText, useT } from '../i18n/locale';
 import { SHORTCUT_GROUPS, type ShortcutAction } from './catalog';
 import { Icon } from '../components/icons';
@@ -130,7 +130,7 @@ export function ShortcutsDialog({ onClose }: ShortcutsDialogProps) {
                             </div>
                             <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                               <button type="button" onClick={() => setPending(null)} style={{ fontSize: 11, background: 'none', border: `0.5px solid ${theme.border}`, borderRadius: 6, padding: '3px 8px', color: theme.text, cursor: 'pointer' }}>{t('取消')}</button>
-                              <button type="button" onClick={() => { setBinding(pending.id, pending.keys); setPending(null); }} style={{ fontSize: 11, background: theme.accent, border: 'none', borderRadius: 6, padding: '3px 8px', color: theme.onAccent, cursor: 'pointer' }}>{t('仍要绑定')}</button>
+                              <button type="button" onClick={() => { setBinding(pending.id, pending.keys); setPending(null); }} style={{ fontSize: 11, ...accentOutline, borderRadius: 6, padding: '3px 8px', cursor: 'pointer' }}>{t('仍要绑定')}</button>
                             </div>
                           </div>
                         )}

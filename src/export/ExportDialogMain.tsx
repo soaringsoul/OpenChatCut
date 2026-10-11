@@ -2,6 +2,7 @@ import type { ProjectDoc, TimelineState } from '../editor/types';
 import { useT } from '../i18n/locale';
 import { ExportDestinationBar } from './ExportDestinationBar';
 import { ExportFooter } from './ExportDialogFooter';
+import { StudioReturnButton } from './StudioReturnButton';
 import { ExportTabContent } from './ExportDialogTabs';
 import { EXPORT_TABS, type ExportDialogModel } from './useExportDialogModel';
 import type { ExportTab, RenderEngine } from './useExportWorkflow';
@@ -111,6 +112,7 @@ export function ExportDialogMain({ state, project, model }: { state: TimelineSta
       )}
       <ExportFooter tab={model.tab} outputName={model.outputName} videoSummary={model.videoSummary}
         disabled={model.disabled} workflow={workflow} />
+      {workflow.progress?.phase === 'completed' ? <StudioReturnButton project={project} projectId={model.projectId} /> : null}
     </main>
   );
 }

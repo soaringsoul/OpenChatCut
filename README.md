@@ -1,3 +1,11 @@
+# opencut_os（dtb_media_studio 视频剪辑端）
+
+本目录是 OpenChatCut 的独立工作副本，在地图帮媒体工作室中命名为 `opencut_os`。素材管理端位于 `../assets_os/`，跨端逻辑位于 `../integration/`；接口协作尚在规划阶段。
+
+启动前使用 Node 24 执行 `npm ci`，按 `.env.example` 配置本副本的 `.env.local`，再运行 `./launch.sh start`（开发端口 `5199`）。本次未迁入原目录的用户工程、媒体、密钥或运行缓存。
+
+来源与迁入边界见 [STUDIO_ORIGIN.md](STUDIO_ORIGIN.md)，总览见 [工作室说明](../README.md)。下方保留上游说明与署名；原包名、CLI、Electron 应用身份和存储命名空间继续沿用上游。
+
 <p align="center">
   <img src="public/openchatcut-icon.png" width="96" alt="OpenChatCut" />
 </p>

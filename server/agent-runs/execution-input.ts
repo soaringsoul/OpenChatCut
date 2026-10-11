@@ -1,4 +1,5 @@
 import {
+  apiLlmProviderSetting,
   defaultModelForProvider,
   normalizeLlmProvider,
   normalizeOpenAiApiMode,
@@ -29,7 +30,7 @@ export function resolveRunExecution(
       : backend === 'copilot'
         ? { provider: copilotProviderForModel(requestedModel), model: '' }
         : resolveLlmProviderConfig(requireLlmProvider(
-          provider === undefined || provider === null || provider === '' ? getKey('LLM_PROVIDER') : provider,
+          provider === undefined || provider === null || provider === '' ? apiLlmProviderSetting(getKey('LLM_PROVIDER')) : provider,
         ), readKey);
   const effectiveProvider = normalizeLlmProvider(config.provider);
   const effectiveModel = backend === 'copilot'

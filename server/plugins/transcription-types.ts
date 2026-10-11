@@ -5,6 +5,7 @@ export const CLOUD_TRANSCRIPTION_PROVIDERS = [
   'groq',
   'elevenlabs',
   'cartesia',
+  'stepfun',
 ] as const;
 
 export type CloudTranscriptionProvider = (typeof CLOUD_TRANSCRIPTION_PROVIDERS)[number];
@@ -25,6 +26,9 @@ export interface TranscriptionOptions {
   elevenModel: string;
   cartesiaApiKey: string;
   cartesiaModel: string;
+  stepfunBaseUrl: string;
+  stepfunApiKey: string;
+  stepfunModel: string;
   language: string;
   diarization: boolean;
 }

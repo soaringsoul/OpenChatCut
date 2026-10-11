@@ -4,7 +4,7 @@ import type { ProjectDoc } from '../editor/types';
 import { useT } from '../i18n/locale';
 import { loadProjectForEditing, renameProject } from '../persist/projectStore';
 import type { ProjectMeta } from '../persist/projectStoreCoordinators';
-import { theme } from '../theme';
+import { accentOutline, theme } from '../theme';
 import { emptyProjectDoc, navigateTo, type AppRoute } from './appShell';
 import { editorAccess } from './editorAccess';
 import { EditorErrorBoundary, SecureContextRequiredView } from './EditorGuards';
@@ -68,8 +68,7 @@ function EditorLoader({ meta, onHome, onRename }: EditorLoaderProps) {
               type="button"
               onClick={() => setAttempt((n) => n + 1)}
               style={{
-                padding: '6px 14px', borderRadius: 6, border: `0.5px solid ${theme.border}`,
-                background: theme.accent, color: theme.bg, fontSize: 12.5, cursor: 'pointer',
+                padding: '6px 14px', borderRadius: 6, ...accentOutline, fontSize: 12.5, cursor: 'pointer',
               }}
             >
               {t('重试')}

@@ -18,7 +18,7 @@ import type { ProjectMeta } from '../persist/projectStoreCoordinators';
 import { kvRemoteMode } from '../persist/sharedKv';
 import { projectStoreWriteCredential } from '../persist/projectStoreTransport';
 
-export type AppRoute = { name: 'dashboard' } | { name: 'editor'; id: string };
+export type AppRoute = { name: 'dashboard' } | { name: 'editor'; id: string } | { name: 'settings'; vendor?: string };
 
 interface LiveAgentStatus {
   readonly caps?: Record<string, boolean>;
@@ -41,8 +41,14 @@ export const emptyProjectDoc = (): ProjectDoc => docFromTimeline(emptyState());
 const seedDoc = async (): Promise<ProjectDoc> => docFromTimeline((await import('../editor/initial')).INITIAL);
 
 function parseHash(): AppRoute {
-  const match = window.location.hash.match(/^#\/editor\/(.+)$/);
-  return match ? { name: 'editor', id: match[1] } : { name: 'dashboard' };
+  const editor = window.location.hash.match(/^#\/editor\/(.+)$/);
+  if (editor) return { name: 'editor', id: editor[1] };
+  const settings = window.location.hash.match(/^#\/settings(?:\/(.*))?$/);
+  if (settings) {
+    const vendor = settings[1]?.split('/').map((part) => decodeURIComponent(part)).join('/');
+    return { name: 'settings', vendor: vendor || undefined };
+  }
+  return { name: 'dashboard' };
 }
 
 export function navigateTo(hash: string): void {

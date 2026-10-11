@@ -462,6 +462,23 @@ assert.deepEqual(
   [],
   'directory symlink entries must never become import candidates',
 );
+assert.deepEqual(
+  await scanImportDirectory(ROOT, {
+    readdir: async (path) => {
+      if (path === ROOT) {
+        return [
+          entry('shot.mp4'),
+          entry('._shot.mp4'),
+          entry('.DS_Store'),
+          entry('__MACOSX', 'directory'),
+        ];
+      }
+      return [entry('._lost.mp4')];
+    },
+  }),
+  [{ path: join(ROOT, 'shot.mp4'), name: 'shot.mp4' }],
+  'AppleDouble sidecars and __MACOSX must not become import candidates',
+);
 const scanErrors: unknown[] = [];
 assert.deepEqual(
   await scanImportDirectory(ROOT, {

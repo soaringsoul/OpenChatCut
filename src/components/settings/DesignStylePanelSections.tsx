@@ -17,7 +17,7 @@ import {
 import type { Locale } from '../../i18n/locale';
 import { useT } from '../../i18n/locale';
 import type { OwnedStyle } from '../../persist/ownedStyleStore';
-import { theme, themeAlpha } from '../../theme';
+import { accentOutline, theme, themeAlpha } from '../../theme';
 import { Icon } from '../icons';
 import { DesignStyleTransferButtons } from './DesignStyleTransferButtons';
 import {
@@ -341,7 +341,7 @@ const hexInput: CSSProperties = { minWidth: 0, flex: 1, background: 'none', bord
 const textInput: CSSProperties = { width: '100%', background: theme.bg, color: theme.text, border: `0.5px solid ${theme.borderLight}`, borderRadius: 6, padding: '7px 9px', fontSize: 13, outline: 'none', boxSizing: 'border-box' };
 const iconBtn: CSSProperties = { background: 'none', border: 'none', color: theme.textDim, cursor: 'pointer', padding: 3, lineHeight: 0 };
 const ghostBtn: CSSProperties = { background: 'none', border: `0.5px solid ${theme.border}`, color: theme.text, borderRadius: 4, padding: '6px 14px', fontSize: 13, cursor: 'pointer' };
-const primaryBtn: CSSProperties = { background: theme.accent, border: 'none', color: theme.onAccent, borderRadius: 4, padding: '6px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' };
+const primaryBtn: CSSProperties = { ...accentOutline, borderRadius: 4, padding: '6px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' };
 const fontGrid: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 };
 const fontField: CSSProperties = { position: 'relative', display: 'flex', flexDirection: 'column', gap: 4 };
 const fontLabel: CSSProperties = { fontSize: 11.5, color: theme.textDim, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };

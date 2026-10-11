@@ -2,6 +2,7 @@ import type { IncomingMessage } from 'node:http';
 import type { Plugin } from 'vite';
 import { getKey, type KeyName } from '../keystore.ts';
 import {
+  apiLlmProviderSetting,
   requireLlmProvider,
   llmProviderPreset,
   protocolForProvider,
@@ -17,7 +18,7 @@ function keyReader(name: string): string {
 
 export function llmProviderForRequest(req?: IncomingMessage): LlmProvider {
   const requested = req?.headers['x-openchatcut-provider'];
-  return requireLlmProvider(requested === undefined ? getKey('LLM_PROVIDER') : requested);
+  return requireLlmProvider(requested === undefined ? apiLlmProviderSetting(getKey('LLM_PROVIDER')) : requested);
 }
 
 export function llmTarget(req?: IncomingMessage): string {

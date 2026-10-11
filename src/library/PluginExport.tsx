@@ -1,7 +1,7 @@
 // "Creation Extension": Check the custom content in the session → Group package verification →
 // Save to local resource library or download submission JSON. The pure logic of the group package is in plugins/export.ts.
 import { useMemo, useState } from 'react';
-import { theme } from '../theme';
+import { accentOutline, theme } from '../theme';
 import { useT } from '../i18n/locale';
 import type { TimelineItem, TransitionItem } from '../editor/types';
 import type { SerializableFxDef } from '../gl/fx/uniforms';
@@ -144,11 +144,11 @@ export function PluginExport({ items, transitions, fxDefs, defaultOpen = false }
               <Group title={t('时间线 MG · {n}', { n: groups.mg.length })} list={groups.mg} checked={checked} toggle={toggle} />
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => { void doSave(); }} disabled={saving}
-                  style={{ background: theme.accent, color: theme.onAccent, border: 'none', borderRadius: 6, padding: '5px 14px', fontSize: 12, fontWeight: 600, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.65 : 1 }}>
+                  style={{ ...accentOutline, borderRadius: 6, padding: '5px 14px', fontSize: 12, fontWeight: 600, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.65 : 1 }}>
                   {saving ? t('保存中…') : t('保存到资源库')}
                 </button>
                 <button onClick={doExport} disabled={saving}
-                  style={{ background: theme.accent, color: theme.onAccent, border: 'none', borderRadius: 6, padding: '5px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                  style={{ ...accentOutline, borderRadius: 6, padding: '5px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                   {t('导出投稿包')}
                 </button>
               </div>

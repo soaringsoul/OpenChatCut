@@ -1,6 +1,7 @@
+import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { existsSync } from 'node:fs';
-import { join, sep } from 'node:path';
+import { chmodSync, existsSync, statSync } from 'node:fs';
+import { isAbsolute, join, sep } from 'node:path';
 
 const require = createRequire(import.meta.url);
 const ffmpegStatic = require('ffmpeg-static') as string | null;
@@ -26,22 +27,81 @@ export function unpackedPath(path: string): string {
 }
 
 /**
+ * ffmpeg-static's postinstall writes the binary then chmod 0755, but it also
+ * exits early when the file already exists. A cached 0644 download, umask, or
+ * copy without the execute bit then makes every spawn fail with EACCES — which
+ * surfaces as "video compatibility processing failed" on media import.
+ * Restore the execute bits on a real file before handing the path to spawn.
+ */
+export function ensureSpawnableBinary(path: string): string {
+  if (process.platform === 'win32' || !isAbsolute(path)) return path;
+  try {
+    const info = statSync(path);
+    if (!info.isFile() || (info.mode & 0o111) !== 0) return path;
+    chmodSync(path, info.mode | 0o111);
+  } catch {
+    // Leave the path as-is; the next spawn will report the real OS error.
+  }
+  return path;
+}
+
+function isWorkingMediaBinary(path: string): boolean {
+  try {
+    const result = spawnSync(path, ['-version'], {
+      encoding: 'utf8',
+      timeout: 8_000,
+      windowsHide: true,
+    });
+    if (result.error || result.status !== 0) return false;
+    return /ffmpeg|ffprobe/i.test(`${result.stdout ?? ''}\n${result.stderr ?? ''}`);
+  } catch {
+    return false;
+  }
+}
+
+function firstWorkingBinary(candidates: readonly (string | null | undefined)[]): string {
+  const names = candidates.filter((value): value is string => Boolean(value));
+  for (const candidate of names) {
+    const path = ensureSpawnableBinary(candidate);
+    if (isWorkingMediaBinary(path)) return path;
+  }
+  return ensureSpawnableBinary(names[0] ?? 'ffmpeg');
+}
+
+let resolvedFfmpeg: string | undefined;
+let resolvedFfprobe: string | undefined;
+
+/**
  * Prefer explicit overrides for developers who need a custom FFmpeg build.
  * Packaged desktop builds fall back to the platform binaries shipped through
  * production dependencies, so media import does not depend on the user's PATH.
+ * If the bundled binary is missing execute bits or fails macOS Mach-O
+ * validation (EBADMACHO / -88), fall back to Homebrew or a PATH install.
  */
 export function ffmpegBin(): string {
-  return process.env.OPENCHATCUT_FFMPEG
-    ?? process.env.FFMPEG_PATH
-    ?? (ffmpegStatic ? unpackedPath(ffmpegStatic) : null)
-    ?? 'ffmpeg';
+  const override = process.env.OPENCHATCUT_FFMPEG ?? process.env.FFMPEG_PATH;
+  if (override) return ensureSpawnableBinary(override);
+  if (resolvedFfmpeg) return resolvedFfmpeg;
+  resolvedFfmpeg = firstWorkingBinary([
+    ffmpegStatic ? unpackedPath(ffmpegStatic) : null,
+    '/opt/homebrew/bin/ffmpeg',
+    '/usr/local/bin/ffmpeg',
+    'ffmpeg',
+  ]);
+  return resolvedFfmpeg;
 }
 
 export function ffprobeBin(): string {
-  return process.env.OPENCHATCUT_FFPROBE
-    ?? process.env.FFPROBE_PATH
-    ?? (ffprobeInstaller.path ? unpackedPath(ffprobeInstaller.path) : null)
-    ?? 'ffprobe';
+  const override = process.env.OPENCHATCUT_FFPROBE ?? process.env.FFPROBE_PATH;
+  if (override) return ensureSpawnableBinary(override);
+  if (resolvedFfprobe) return resolvedFfprobe;
+  resolvedFfprobe = firstWorkingBinary([
+    ffprobeInstaller.path ? unpackedPath(ffprobeInstaller.path) : null,
+    '/opt/homebrew/bin/ffprobe',
+    '/usr/local/bin/ffprobe',
+    'ffprobe',
+  ]);
+  return resolvedFfprobe;
 }
 
 /**

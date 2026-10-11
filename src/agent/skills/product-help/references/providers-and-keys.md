@@ -58,6 +58,9 @@ default, and local transcription needs no cloud key. Cloud choices use:
   to `scribe_v2`
 - Cartesia: `CARTESIA_API_KEY`; `CARTESIA_TRANSCRIPTION_MODEL` defaults to
   `ink-whisper` (batch transcription; `ink-2` is streaming-only)
+- StepFun: reuses `LLM_STEPFUN_API_KEY` / `LLM_STEPFUN_BASE_URL`;
+  `STEPFUN_TRANSCRIPTION_MODEL` defaults to `stepaudio-2.5-asr`
+  (SSE with timestamps; speaker diarization not supported)
 
 `TRANSCRIPTION_LANGUAGE` defaults to `zh`, and
 `TRANSCRIPTION_DIARIZATION` defaults to `1`. Credentials stay server-side;

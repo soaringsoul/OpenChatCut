@@ -271,6 +271,7 @@ export const PROBES: Record<string, ProbeDef> = {
   'image/gemini': geminiMediaProbe,
   'image/minimax': minimaxProbe,
   'image/byteplus': byteplusProbe,
+  'image/stepfun': llmProbe('stepfun'),
   'image/xai': xaiMediaProbe,
   'image/wavespeed': {
     needs: [['WAVESPEED_API_KEY']],
@@ -301,6 +302,7 @@ export const PROBES: Record<string, ProbeDef> = {
     }),
   },
   'voice/minimax': minimaxProbe,
+  'voice/stepfun': llmProbe('stepfun'),
   'voice/inworld': {
     needs: [['INWORLD_TTS_API_KEY']],
     run: (get) => fetch(`${base(get, 'INWORLD_TTS_BASE_URL', 'https://api.inworld.ai')}/voices/v1/voices`, {
@@ -351,6 +353,7 @@ export const PROBES: Record<string, ProbeDef> = {
     }),
   },
   'music/minimax': minimaxProbe,
+  'music/stepfun': llmProbe('stepfun'),
   'music/atlas': atlasMusicProbe,
   // Read-only account endpoint; fake key → 401. The same key also serves
   // /generate/sound (video-to-SFX), so one probe covers both capabilities.
@@ -403,6 +406,7 @@ export const PROBES: Record<string, ProbeDef> = {
   'transcription/groq': groqProbe,
   'transcription/elevenlabs': elevenLabsProbe,
   'transcription/cartesia': cartesiaProbe,
+  'transcription/stepfun': llmProbe('stepfun'),
   'sandbox/e2b': {
     needs: [['E2B_API_KEY']],
     run: (get) => fetch('https://api.e2b.dev/sandboxes', {

@@ -3,7 +3,7 @@
 // read-only forever afterwards. Visual vocabulary follows MediaCleanupDialog.
 import { useCallback, useEffect, useState } from 'react';
 import { useT } from '../../i18n/locale';
-import { theme, themeAlpha } from '../../theme';
+import { accentOutline, theme, themeAlpha } from '../../theme';
 import { Icon } from '../icons';
 import { cleanupLegacyJson, loadMigrationStatus, runStorageMigrationRequest, STORAGE_MIGRATED_EVENT, type MigrationStatus } from './storageMigration';
 
@@ -48,7 +48,7 @@ const secondaryBtn: React.CSSProperties = {
   cursor: 'pointer', fontSize: 12.5, padding: '6px 14px', borderRadius: 4,
 };
 const primaryBtn: React.CSSProperties = {
-  background: theme.accent, border: 'none', color: theme.onAccent, cursor: 'pointer',
+  ...accentOutline, cursor: 'pointer',
   fontSize: 12.5, padding: '6px 14px', borderRadius: 4,
 };
 const primaryBtnDisabled: React.CSSProperties = { ...primaryBtn, opacity: 0.5, cursor: 'default' };

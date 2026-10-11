@@ -204,6 +204,59 @@ export async function callByteplusImageProvider(baseUrl: string, apiKey: string,
   return result.data;
 }
 
+/** StepFun docs list size as height×width for non-square; map aspect to a supported preset. */
+export function stepfunImageSize(aspectRatio?: string): string {
+  switch (aspectRatio) {
+    case '9:16': return '1360x768';
+    case '3:4':
+    case '4:5':
+    case '2:3': return '1184x896';
+    case '16:9':
+    case '21:9': return '768x1360';
+    case '4:3':
+    case '5:4':
+    case '3:2': return '896x1184';
+    default: return '1024x1024';
+  }
+}
+
+const STEPFUN_IMAGE_SIZES = new Set(['1024x1024', '1360x768', '1184x896', '768x1360', '896x1184']);
+
+/** Assets send an OpenAI-style body. StepFun only accepts one image, a preset size, and b64 output. */
+export function stepfunImageGenerationBody(body: Record<string, unknown>, modelId: string): Record<string, unknown> {
+  const prompt = typeof body.prompt === 'string' ? body.prompt : '';
+  const aspect = typeof body.aspect_ratio === 'string' ? body.aspect_ratio : '';
+  const size = typeof body.size === 'string' ? body.size : '';
+  const resolved = aspect.includes(':')
+    ? stepfunImageSize(aspect)
+    : STEPFUN_IMAGE_SIZES.has(size) ? size : stepfunImageSize(size.includes(':') ? size : undefined);
+  return { model: modelId, prompt, n: 1, size: resolved, response_format: 'b64_json' };
+}
+
+export async function callStepfunImageProvider(baseUrl: string, apiKey: string, model: string, body: {
+  prompt: string;
+  count: number;
+  aspectRatio?: string;
+}): Promise<ProviderImage[]> {
+  if (body.count !== 1) throw new Error('StepFun image generation supports exactly one image per request');
+  if (body.prompt.length > 512) throw new Error('StepFun prompt must be at most 512 characters');
+  const response = await fetchWithProxy(`${baseUrl.replace(/\/$/, '')}/images/generations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model,
+      prompt: body.prompt,
+      n: 1,
+      size: stepfunImageSize(body.aspectRatio),
+      response_format: 'b64_json',
+    }),
+  });
+  if (!response.ok) throw new Error(await imageProviderError(response));
+  const result = await response.json() as { data?: ProviderImage[] };
+  if (!result.data?.length) throw new Error('StepFun returned no images');
+  return result.data;
+}
+
 export async function callGrokImageProvider(baseUrl: string, apiKey: string, model: string, body: {
   prompt: string;
   count: number;

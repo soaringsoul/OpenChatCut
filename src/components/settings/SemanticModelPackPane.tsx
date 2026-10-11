@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useT } from '../../i18n/locale';
-import { theme } from '../../theme';
+import { accentOutline, theme } from '../../theme';
 import {
   fetchModelPackCatalog,
   fetchModelPackTask,
@@ -121,5 +121,5 @@ const smallBtn: React.CSSProperties = {
   color: theme.text, cursor: 'pointer', whiteSpace: 'nowrap',
 };
 const primaryBtn: React.CSSProperties = {
-  background: theme.accent, color: theme.onAccent, borderColor: 'transparent', fontWeight: 650,
+  background: accentOutline.background, color: accentOutline.color, borderColor: theme.accent, fontWeight: 650,
 };

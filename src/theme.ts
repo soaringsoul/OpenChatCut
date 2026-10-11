@@ -37,6 +37,13 @@ export const theme = {
   clipText: 'var(--cc-clip-text)', // --tl-item-text
 } as const;
 
+/** Primary action buttons are outlined, never filled with the accent. */
+export const accentOutline = {
+  background: 'transparent',
+  border: `1px solid ${theme.accent}`,
+  color: theme.accentDeep,
+} as const;
+
 const alpha = (channel: string, opacity: number): string =>
   `rgba(var(--cc-${channel}-rgb), ${opacity})`;
 

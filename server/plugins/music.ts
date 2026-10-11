@@ -16,6 +16,7 @@ import { generateAtlasMusic } from './music-atlas.ts';
 import { generateMureka, pickMurekaAudioUrl } from './music-mureka.ts';
 import { isMinimaxCoverModel, minimaxMusicUrl } from './music-minimax.ts';
 import { generateSoniloMusic, soniloMusicResult } from './music-sonilo.ts';
+import { generateStepfunMusic } from './music-stepfun.ts';
 import type { MusicOptions, MusicRequest, ValidMusicRequest } from './music-types.ts';
 import { validateMusicRequest } from './music-validation.ts';
 import { fetchGeneratedResult } from './result-download.ts';
@@ -77,6 +78,20 @@ async function runMusicOperation(
   // Sonilo license ids ride alongside the single result URL; a resume from a
   // stored URL checkpoint recovers the audio, the sidecar stays best-effort.
   let soniloLicenseIds: (string | undefined)[] = [];
+  if (input.provider === 'stepfun') {
+    if (checkpoint.complete && urls[0]) {
+      return singleMusicResult(operationId, input, urls[0]);
+    }
+    const saved = await generateStepfunMusic(
+      options,
+      input,
+      (taskId) => registerProviderTask('stepfun', taskId),
+      providerTaskId,
+    );
+    const result: GenerationResult = { assetId: operationId, kind: 'audio', name: input.name, ...saved };
+    await registerDownload(saved.path, async () => result, 0);
+    return result;
+  }
   if (!checkpoint.complete) {
     let providerUrls: string[];
     if (input.provider === 'minimax') {
@@ -118,7 +133,7 @@ async function runMusicOperation(
 }
 
 export function musicGenerationPlugin(options: MusicOptions): Plugin {
-  for (const provider of ['mureka', 'minimax', 'atlas', 'sonilo'] as const) {
+  for (const provider of ['mureka', 'minimax', 'atlas', 'sonilo', 'stepfun'] as const) {
     registerGenerationJobResumer('submit_music', provider, async (
       snapshot: GenerationJobSnapshot,
       _update,
@@ -154,11 +169,15 @@ export function musicGenerationPlugin(options: MusicOptions): Plugin {
           if (input.provider === 'sonilo' && !options.soniloApiKey) {
             throw new Error('Sonilo is not configured. Set SONILO_API_KEY in .env.local or 设置面板.');
           }
+          if (input.provider === 'stepfun' && !options.stepfunApiKey) {
+            throw new Error('StepFun is not configured. Set LLM_STEPFUN_API_KEY in .env.local or 设置面板.');
+          }
           // Sonilo has no client-selected model: /v1 routes to the latest server-side.
           const model = input.provider === 'minimax' ? options.minimaxModel
             : input.provider === 'atlas' ? options.atlasModel
               : input.provider === 'sonilo' ? 'v1'
-                : options.model;
+                : input.provider === 'stepfun' ? options.stepfunModel
+                  : options.model;
           const submitArgs = Object.fromEntries(Object.entries(raw).filter(([key]) => key !== 'operationId'));
           const submission = await createGenerationJob(
             { kind: 'music', model, ...input },

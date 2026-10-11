@@ -25,14 +25,15 @@ const {
 // Synchronize this list when adding other capability pages.
 const EXPECTED_PAGES = [
   ...LLM_PROVIDER_PRESETS.map((preset) => `llm/${preset.id}`),
-  'image/openai', 'image/gemini', 'image/minimax', 'image/wavespeed', 'image/byteplus', 'image/xai',
+  'image/openai', 'image/gemini', 'image/minimax', 'image/wavespeed', 'image/byteplus', 'image/stepfun', 'image/xai',
   'voice/elevenlabs', 'voice/openai', 'voice/gemini', 'voice/mistral', 'voice/cartesia',
-  'voice/doubao', 'voice/minimax', 'voice/inworld', 'voice/fishaudio', 'voice/speechify',
+  'voice/doubao', 'voice/minimax', 'voice/stepfun', 'voice/inworld', 'voice/fishaudio', 'voice/speechify',
   'video/seedance', 'video/kling', 'video/hailuo', 'video/byteplus', 'video/xai', 'video/ofox',
-  'music/mureka', 'music/minimax', 'music/atlas', 'music/sonilo',
+  'music/mureka', 'music/minimax', 'music/stepfun', 'music/atlas', 'music/sonilo',
   'stock/pexels', 'stock/pixabay', 'stock/unsplash', 'stock/freesound',
   'transcription/assemblyai', 'transcription/openai', 'transcription/mistral',
   'transcription/deepgram', 'transcription/groq', 'transcription/elevenlabs', 'transcription/cartesia',
+  'transcription/stepfun',
   'sandbox/e2b',
   'web/firecrawl',
   'storage/r2', 'storage/local',

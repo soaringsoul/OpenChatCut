@@ -1,3 +1,5 @@
+import { isIgnoredImportName } from '../../shared/file-name';
+
 export type MediaKind = 'video' | 'image' | 'audio' | 'gif' | 'svg';
 
 export interface MediaMetadata {
@@ -13,6 +15,7 @@ const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.avif', '.heic', '.
 const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.opus', '.flac'];
 
 export function kindOfDescriptor(rawName: string, rawType = ''): MediaKind | null {
+  if (isIgnoredImportName(rawName)) return null;
   const name = rawName.toLowerCase();
   const type = rawType.toLowerCase();
   const dot = name.lastIndexOf('.');

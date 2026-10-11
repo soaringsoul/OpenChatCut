@@ -7,6 +7,9 @@ import type { Plugin } from "vite";
 import { crossOriginIsolationPlugin } from "./cross-origin-isolation.ts";
 import { storageLifecyclePlugin } from './storage-lifecycle.ts';
 import { projectStorePlugin } from "./project-store-plugin.ts";
+import { studioBridgePlugin } from "./studio-bridge.ts";
+import { studioModelsPlugin } from './studio-models.ts';
+import { agentMotionPlugin } from "./agent-motion.ts";
 import { extensionStorePlugin } from "./extension-store.ts";
 import { exportPlugin } from "./export.ts";
 import { exportQaPlugin } from "./export-qa.ts";
@@ -75,6 +78,9 @@ export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plu
       },
     }),
     projectStorePlugin({ http: options.projectStoreHttp }),
+    studioModelsPlugin(),
+    studioBridgePlugin(),
+    agentMotionPlugin(),
     extensionStorePlugin(),
     externalAgentPlugin(),
     codexAgentPlugin(),
@@ -148,6 +154,15 @@ export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plu
       get byteplusModel() {
         return getKey("BYTEPLUS_IMAGE_MODEL") || "seedream-4-5-251128";
       },
+      get stepfunBaseUrl() {
+        return getKey("LLM_STEPFUN_BASE_URL") || "https://api.stepfun.com/v1";
+      },
+      get stepfunApiKey() {
+        return getKey("LLM_STEPFUN_API_KEY");
+      },
+      get stepfunModel() {
+        return getKey("STEPFUN_IMAGE_MODEL") || "step-image-edit-2";
+      },
       get xaiBaseUrl() {
         return getKey("LLM_XAI_BASE_URL") || "https://api.x.ai/v1";
       },
@@ -218,6 +233,18 @@ export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plu
       get speechifyModel() {
         return getKey("SPEECHIFY_TTS_MODEL") || "simba-multilingual";
       },
+      get stepfunBaseUrl() {
+        return getKey("LLM_STEPFUN_BASE_URL") || "https://api.stepfun.com/v1";
+      },
+      get stepfunApiKey() {
+        return getKey("LLM_STEPFUN_API_KEY");
+      },
+      get stepfunModel() {
+        return getKey("STEPFUN_TTS_MODEL") || "stepaudio-2.5-tts";
+      },
+      get stepfunDefaultVoice() {
+        return getKey("STEPFUN_TTS_VOICE") || "zixinnansheng";
+      },
       ai: aiVoiceOptions(),
     }),
     soundGenerationPlugin({
@@ -270,6 +297,15 @@ export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plu
       },
       get soniloApiKey() {
         return getKey("SONILO_API_KEY");
+      },
+      get stepfunBaseUrl() {
+        return getKey("LLM_STEPFUN_BASE_URL") || "https://api.stepfun.com/v1";
+      },
+      get stepfunApiKey() {
+        return getKey("LLM_STEPFUN_API_KEY");
+      },
+      get stepfunModel() {
+        return getKey("STEPFUN_MUSIC_MODEL") || "stepaudio-3-music-preview";
       },
     }),
     videoGenerationPlugin({

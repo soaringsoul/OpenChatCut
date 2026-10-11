@@ -3,7 +3,7 @@ import type { Plugin } from 'vite';
 
 import { generateAiVoice, isAiVoiceProvider } from './voice-ai-sdk.ts';
 import { saveVoiceAudio, saveVoiceSubtitle } from './voice-media.ts';
-import { doubaoVoice, elevenLabsVoice, fishAudioVoice, inworldVoice, minimaxVoice, speechifyVoice } from './voice-providers.ts';
+import { doubaoVoice, elevenLabsVoice, fishAudioVoice, inworldVoice, minimaxVoice, speechifyVoice, stepfunVoice } from './voice-providers.ts';
 import type { VoiceOptions, VoiceProvider, VoiceRequest } from './voice-types.ts';
 import { validateVoiceRequest } from './voice-validation.ts';
 
@@ -60,6 +60,7 @@ export function voiceGenerationPlugin(options: VoiceOptions): Plugin {
           else if (input.provider === 'doubao') bytes = await doubaoVoice(options, input);
           else if (input.provider === 'inworld') bytes = await inworldVoice(options, input);
           else if (input.provider === 'fishaudio') bytes = await fishAudioVoice(options, input);
+          else if (input.provider === 'stepfun') bytes = await stepfunVoice(options, input);
           else bytes = await speechifyVoice(options, input);
           const audio = audioDescriptor(input.provider, input.outputFormat, input.audioFormat, input.sampleRate);
           const saved = await saveVoiceAudio(bytes, audio.codec, audio.sampleRate, input.provider === 'doubao' ? input.pitch ?? 0 : 0);

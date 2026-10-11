@@ -55,7 +55,7 @@ const ROUTING_GROUPS: readonly RoutingGroup[] = [
   },
   {
     requestContext: [
-      ['assemblyai', 'local', 'openai', 'mistral', 'deepgram', 'groq', 'elevenlabs', 'cartesia'],
+      ['assemblyai', 'local', 'openai', 'mistral', 'deepgram', 'groq', 'elevenlabs', 'cartesia', 'stepfun', '阶跃'],
       ['transcribe', 'transcription', 'speech-to-text', 'stt', 'asr', '转写', '语音识别'],
     ],
     tools: ['transcribe_track', 'read_transcript', 'find_transcript'],
@@ -144,7 +144,7 @@ const ROUTING_GROUPS: readonly RoutingGroup[] = [
     requestKeywords: ['web', 'search', 'crawl', 'website', 'skill', 'code', '网页', '搜索', '抓取', '网站', '技能', '脚本'],
     tools: [
       'web_browser', 'web_search', 'web_map', 'web_crawl', 'web_batch_scrape', 'manage_skill',
-      'install_skill', 'run_skill_script', 'run_code', 'search_fonts',
+      'install_skill', 'run_skill_script', 'run_agent_motion_script', 'run_code', 'search_fonts',
     ],
   },
 ];

@@ -21,6 +21,9 @@ const options: TranscriptionOptions = {
   elevenModel: 'scribe_v2',
   cartesiaApiKey: 'cartesia-test-key',
   cartesiaModel: 'ink-whisper',
+  stepfunBaseUrl: 'https://api.stepfun.test/v1',
+  stepfunApiKey: 'stepfun-test-key',
+  stepfunModel: 'stepaudio-2.5-asr',
   language: 'zh',
   diarization: true,
 };

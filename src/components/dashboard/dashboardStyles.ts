@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { theme } from '../../theme';
+import { accentOutline, theme } from '../../theme';
 
 export const newCard: CSSProperties = {
   width: '100%', aspectRatio: '16 / 9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -22,8 +22,7 @@ export const modelSetupIcon: CSSProperties = {
   borderRadius: 6, color: theme.textStrong, background: theme.hover,
 };
 export const modelSetupButton: CSSProperties = {
-  flex: '0 0 auto', border: `0.5px solid ${theme.accent}`, borderRadius: 5,
-  background: theme.accent, color: theme.onAccent, padding: '7px 12px',
+  flex: '0 0 auto', ...accentOutline, borderRadius: 5, padding: '7px 12px',
   fontSize: 12, fontWeight: 650, cursor: 'pointer',
 };
 export const importBtn: CSSProperties = {

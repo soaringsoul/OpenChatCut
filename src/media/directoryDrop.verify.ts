@@ -88,6 +88,21 @@ function transfer(items: DataTransferItem[], files: File[] = []): DataTransfer {
 }
 
 {
+  const video = new File(['video'], 'shot.mp4', { type: 'video/mp4' });
+  const sidecar = new File(['AppleDouble'], '._shot.mp4', { type: 'video/mp4' });
+  const store = new File(['meta'], '.DS_Store', { type: 'application/octet-stream' });
+  const nested = directoryEntry('folder', [
+    fileEntry(video),
+    fileEntry(sidecar),
+    fileEntry(store),
+    directoryEntry('__MACOSX', [fileEntry(new File(['x'], '._lost.mp4', { type: 'video/mp4' }))]),
+  ]);
+  const result = await collectDroppedFiles(transfer([item(nested)]));
+  assert.deepEqual(result.files.map((file) => file.name), ['shot.mp4'], 'Finder sidecars and __MACOSX must not import');
+  assert.deepEqual(result.directories, [['folder']], '__MACOSX must not become a media folder');
+}
+
+{
   let entry: FileSystemEntry = fileEntry(new File(['x'], 'deep.mp4', { type: 'video/mp4' }));
   for (let depth = 0; depth <= DIRECTORY_SCAN_MAX_DEPTH; depth += 1) {
     entry = directoryEntry(`level-${depth}`, [entry]);
@@ -123,3 +138,5 @@ function transfer(items: DataTransferItem[], files: File[] = []): DataTransfer {
   assert.deepEqual(created, ['current/travel', 'current/travel/day-1', 'current/travel/day-2']);
   assert.deepEqual(folderIds, ['current/travel/day-1', 'current/travel/day-2']);
 }
+
+console.log('directoryDrop.verify: folder scan, sidecars, and bounds passed');

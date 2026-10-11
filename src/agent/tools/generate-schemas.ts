@@ -6,11 +6,11 @@ import { MINIMAX_LANGUAGE_BOOSTS } from '../../../shared/media-provider-params';
 export const GENERATE_TOOL_SCHEMAS: AgentToolSchema[] = [
   {
     name: 'submit_image',
-    description: 'Generate one or more AI images (Fal catalog, gpt-image-2, nano-banana, MiniMax image-01, WaveSpeed, BytePlus Seedream, or xAI Grok Imagine), save them to the project media pool, and optionally propose adding them to the active timeline. Call only when the user explicitly requested the generation.',
+    description: 'Generate one or more AI images (Fal catalog, gpt-image-2, nano-banana, MiniMax image-01, WaveSpeed, BytePlus Seedream, StepFun, or xAI Grok Imagine), save them to the project media pool, and optionally propose adding them to the active timeline. Call only when the user explicitly requested the generation.',
     input_schema: {
       type: 'object',
       properties: {
-        model: { type: 'string', enum: ['gpt-image-2', 'nano-banana', 'image-01', 'wavespeed', 'byteplus', 'grok-imagine', 'fal'], description: 'gpt-image-2 is the default; nano-banana is best for reference-heavy work; image-01 is MiniMax (at most 9 outputs; one subject reference when R2 is configured); wavespeed is WaveSpeed AI (fast generic image models, no references); byteplus is BytePlus ModelArk Seedream (no references yet); grok-imagine is xAI Grok Imagine (text-to-image only, no references, at most 4 outputs, 1K/2K).' },
+        model: { type: 'string', enum: ['gpt-image-2', 'nano-banana', 'image-01', 'wavespeed', 'byteplus', 'stepfun', 'grok-imagine', 'fal'], description: 'gpt-image-2 is the default; nano-banana is best for reference-heavy work; image-01 is MiniMax (at most 9 outputs; one subject reference when R2 is configured); wavespeed is WaveSpeed AI (fast generic image models, no references); byteplus is BytePlus ModelArk Seedream (no references yet); stepfun is StepFun step-image-edit-2 (prompt ≤512, one image, no references); grok-imagine is xAI Grok Imagine (text-to-image only, no references, at most 4 outputs, 1K/2K).' },
         falModel: { type: 'string', enum: FAL_IMAGE_MODELS.map((model) => model.id), description: `With model=fal, select a curated Fal image model; omitted uses the saved Fal image default. ${FAL_IMAGE_MODELS.map((model) => `${model.id}: ${falModelSummary(model)}`).join('; ')}. Model-specific limits are validated before submission.` },
         prompt: { type: 'string', description: 'Detailed description of the image to generate.' },
         name: { type: 'string', description: 'Short descriptive asset name shown in the media pool.' },
@@ -36,14 +36,14 @@ export const GENERATE_TOOL_SCHEMAS: AgentToolSchema[] = [
   },
   {
     name: 'submit_voice',
-    description: 'Generate one TTS audio asset with ElevenLabs, Doubao, MiniMax, Inworld, Fish Audio, Speechify, OpenAI, Gemini, Mistral, or Cartesia. Creates a media-pool asset only; it does not place or replace timeline items. Confirm a configured provider and concrete provider-specific voice; MiniMax timbreWeights may mix voices with an empty voiceId.',
+    description: 'Generate one TTS audio asset with ElevenLabs, Doubao, MiniMax, Inworld, Fish Audio, Speechify, StepFun, OpenAI, Gemini, Mistral, or Cartesia. Creates a media-pool asset only; it does not place or replace timeline items. Confirm a configured provider and concrete provider-specific voice; MiniMax timbreWeights may mix voices with an empty voiceId.',
     input_schema: {
       type: 'object',
       properties: {
-        provider: { type: 'string', enum: ['elevenlabs', 'doubao', 'minimax', 'inworld', 'fishaudio', 'speechify', 'openai', 'gemini', 'mistral', 'cartesia'], description: 'Required opt-in provider. Use only a provider listed as configured in capabilities. Voice IDs and catalogs are never interchangeable.' },
+        provider: { type: 'string', enum: ['elevenlabs', 'doubao', 'minimax', 'inworld', 'fishaudio', 'speechify', 'stepfun', 'openai', 'gemini', 'mistral', 'cartesia'], description: 'Required opt-in provider. Use only a provider listed as configured in capabilities. Voice IDs and catalogs are never interchangeable.' },
         text: { type: 'string', minLength: 1, description: 'Text to synthesize.' },
-        voiceId: { type: 'string', description: 'Concrete provider-specific voice ID confirmed by the user. Required except MiniMax timbreWeights mixing, where it must be empty. Do not invent a preset or reuse an ID from another provider.' },
-        modelId: { type: 'string', description: 'ElevenLabs, Inworld, Fish Audio, Speechify, OpenAI, Gemini, Mistral, or Cartesia only. Omit to use the configured model.' },
+        voiceId: { type: 'string', description: 'Concrete provider-specific voice ID confirmed by the user. Required except MiniMax timbreWeights mixing, where it must be empty. StepFun defaults to the configured STEPFUN_TTS_VOICE when omitted. Do not invent a preset or reuse an ID from another provider.' },
+        modelId: { type: 'string', description: 'ElevenLabs, Inworld, Fish Audio, Speechify, StepFun, OpenAI, Gemini, Mistral, or Cartesia only. Omit to use the configured model.' },
         stability: { type: 'number', minimum: 0, maximum: 1, description: 'ElevenLabs only. Defaults to 0.5.' },
         speed: { type: 'number', minimum: 0.5, maximum: 2, description: 'ElevenLabs (0.7–1.2), MiniMax (0.5–2), OpenAI, or Cartesia only. Defaults to 1; provider/model support is validated server-side.' },
         similarityBoost: { type: 'number', minimum: 0, maximum: 1, description: 'ElevenLabs voice_settings.similarity_boost.' },
@@ -111,15 +111,15 @@ export const GENERATE_TOOL_SCHEMAS: AgentToolSchema[] = [
   },
   {
     name: 'submit_music',
-    description: 'Submit a Mureka, MiniMax, Atlas Cloud, or Sonilo music job. Mureka supports instrumental, lyrics song, prompt song, soundtrack, and track/stem modes with up to 3 results. MiniMax supports text-to-music and cover. Atlas Cloud supports text-to-music through its asynchronous audio API. Sonilo v2m generates music from a project video asset (the rendered cut, up to 6 minutes) — video-conditioned, with a single optional style prompt. Results are saved to the media pool.',
+    description: 'Submit a Mureka, MiniMax, Atlas Cloud, Sonilo, or StepFun music job. Mureka supports instrumental, lyrics song, prompt song, soundtrack, and track/stem modes with up to 3 results. MiniMax supports text-to-music and cover. Atlas Cloud supports text-to-music through its asynchronous audio API. Sonilo v2m generates music from a project video asset (the rendered cut, up to 6 minutes) — video-conditioned, with a single optional style prompt. StepFun text-to-music / instrumental via stepaudio-3-music-preview (async). Results are saved to the media pool.',
     input_schema: {
       type: 'object',
       properties: {
-        prompt: { type: 'string', maxLength: 2000, description: 'Style/control prompt. Required for most modes; optional with Mureka provider IDs and Sonilo v2m (≤500, works promptless). Mureka max is 1024 or 2000 by mode; MiniMax cover requires 10–300.' },
-        provider: { type: 'string', enum: ['mureka', 'minimax', 'atlas', 'sonilo'], description: 'Defaults to mureka.' },
-        mode: { type: 'string', enum: ['instrumental', 'song', 'prompt-song', 'soundtrack', 'track', 't2m', 'cover', 'v2m'], description: 'Mureka: instrumental/song/prompt-song/soundtrack/track. MiniMax: t2m/cover. Atlas Cloud: t2m. Sonilo: v2m (video-to-music).' },
-        lyrics: { type: 'string', maxLength: 5000, description: 'Mureka song/track or MiniMax t2m/cover lyrics. Provider-specific limits are validated.' },
-        isInstrumental: { type: 'boolean', description: 'MiniMax or Atlas Cloud t2m only. Force instrumental.' },
+        prompt: { type: 'string', maxLength: 2000, description: 'Style/control prompt. Required for most modes; optional with Mureka provider IDs and Sonilo v2m (≤500, works promptless). Mureka max is 1024 or 2000 by mode; MiniMax cover requires 10–300; StepFun uses this as the style caption.' },
+        provider: { type: 'string', enum: ['mureka', 'minimax', 'atlas', 'sonilo', 'stepfun'], description: 'Defaults to mureka.' },
+        mode: { type: 'string', enum: ['instrumental', 'song', 'prompt-song', 'soundtrack', 'track', 't2m', 'cover', 'v2m'], description: 'Mureka: instrumental/song/prompt-song/soundtrack/track. MiniMax: t2m/cover. Atlas Cloud / StepFun: t2m. Sonilo: v2m (video-to-music).' },
+        lyrics: { type: 'string', maxLength: 5000, description: 'Mureka song/track, MiniMax t2m/cover, or StepFun t2m lyrics. Provider-specific limits are validated.' },
+        isInstrumental: { type: 'boolean', description: 'MiniMax, Atlas Cloud, or StepFun t2m only. Force instrumental.' },
         lyricsOptimizer: { type: 'boolean', description: 'MiniMax t2m only. Auto-generate lyrics from prompt.' },
         sampleRate: { type: 'integer', description: 'MiniMax or Atlas Cloud only. One of 16000/24000/32000/44100; default 44100.' },
         bitrate: { type: 'integer', description: 'MiniMax or Atlas Cloud only. One of 32000/64000/128000/256000; default 256000.' },

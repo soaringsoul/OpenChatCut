@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { sanitizeFileName } from './file-name.ts';
+import { isIgnoredImportDirectoryName, isIgnoredImportName, sanitizeFileName } from './file-name.ts';
 import { sanitizeFileName as fromServer } from '../server/file-name.ts';
 
 // Built rather than written literally: a raw control character in source is invisible
@@ -33,5 +33,14 @@ assert.equal(sanitizeFileName('  spaced name  ', 'fallback'), 'spaced name');
 // replaced by a second copy, this identity check fails before the two can silently
 // disagree about the name the user sees and the name written to disk.
 assert.equal(fromServer, sanitizeFileName, 'server/file-name.ts must re-export the shared implementation');
+
+assert.equal(isIgnoredImportName('clip.mp4'), false);
+assert.equal(isIgnoredImportName('._clip.mp4'), true, 'AppleDouble sidecars must not import as video');
+assert.equal(isIgnoredImportName('.DS_Store'), true);
+assert.equal(isIgnoredImportName('Thumbs.db'), true);
+assert.equal(isIgnoredImportName('desktop.ini'), true);
+assert.equal(isIgnoredImportName(''), false, 'empty names fall through to MIME classification');
+assert.equal(isIgnoredImportDirectoryName('__MACOSX'), true);
+assert.equal(isIgnoredImportDirectoryName('cuts'), false);
 
 console.log('file name checks passed');

@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
 import { keyStatus, setKeys } from '../keystore.ts';
+import { invalidateStudioModels } from '../studio-models.ts';
 import { runProbe } from '../key-probes.ts';
 import {
   checkMediaDir,
@@ -188,7 +189,8 @@ export function settingsPlugin(): Plugin {
                 (msg) => server.config.logger.info(msg),
               );
             }
-            await setKeys(patch);
+            await setKeys(patch, typeof req.headers['if-match'] === 'string' ? req.headers['if-match'] : undefined);
+            invalidateStudioModels();
             sendJson(res, 200, settingsBody(dataDirChanged));
             return;
           }

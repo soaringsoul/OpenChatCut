@@ -2,7 +2,7 @@
 // (`grok login` in a terminal); this pane imports the session server-side,
 // shows the account, and refreshes or clears the imported session.
 import { useEffect, useState } from 'react';
-import { theme } from '../../theme';
+import { accentOutline, theme } from '../../theme';
 import { useT } from '../../i18n/locale';
 import { VendorIcon } from './vendorIcons';
 import { FieldRow, ON, TestConnectionRow, type FieldCtx } from './settingsVendorPane';
@@ -29,8 +29,7 @@ const card: React.CSSProperties = {
 const note: React.CSSProperties = { fontSize: 10.5, color: theme.textDim };
 const row: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, minHeight: 26 };
 const primary: React.CSSProperties = {
-  font: 'inherit', fontSize: 11.5, color: '#fff', background: theme.accent,
-  border: 'none', borderRadius: 4, padding: '5px 14px', cursor: 'pointer',
+  font: 'inherit', fontSize: 11.5, ...accentOutline, borderRadius: 4, padding: '5px 14px', cursor: 'pointer',
 };
 const danger: React.CSSProperties = {
   font: 'inherit', fontSize: 11.5, color: '#fff', background: '#c0392b',

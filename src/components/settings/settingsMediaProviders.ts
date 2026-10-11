@@ -105,6 +105,7 @@ export const VOICE_SETTINGS_GROUP: SettingsGroup = {
     { value: 'inworld', label: 'Inworld' },
     { value: 'fishaudio', label: 'Fish Audio' },
     { value: 'speechify', label: 'Speechify' },
+    { value: 'stepfun', label: 'StepFun' },
     { value: 'openai', label: 'OpenAI' },
     { value: 'gemini', label: 'Google Gemini' },
     { value: 'mistral', label: 'Mistral Voxtral' },
@@ -161,6 +162,15 @@ export const VOICE_SETTINGS_GROUP: SettingsGroup = {
       ],
     },
     {
+      key: 'voice/stepfun', vendor: 'stepfun', title: 'StepFun',
+      note: '复用 Agent 大脑 → StepFun 的 API Key / Base URL，无需再填密钥。',
+      fields: [
+        modelText('STEPFUN_TTS_MODEL', '配音模型', 'stepaudio-2.5-tts',
+          '也可填 stepaudio-3-tts 等接口返回的模型 ID。', true),
+        text('STEPFUN_TTS_VOICE', '默认音色 ID', '默认 zixinnansheng（官方示例音色，可改成克隆音色 ID）'),
+      ],
+    },
+    {
       key: 'voice/openai', vendor: 'openai', title: 'OpenAI', fields: [
         secret('OPENAI_API_KEY', 'API Key'),
         text('IMAGE_BASE_URL', 'Base URL', '默认 https://api.openai.com'),
@@ -203,6 +213,7 @@ export const TRANSCRIPTION_SETTINGS_GROUP: SettingsGroup = {
     { value: 'groq', label: 'Groq（云端）' },
     { value: 'elevenlabs', label: 'ElevenLabs Scribe（云端）' },
     { value: 'cartesia', label: 'Cartesia（云端）' },
+    { value: 'stepfun', label: 'StepFun / 阶跃（云端）' },
   ], 'AssemblyAI（默认）'),
   vendors: [
     transcriptionPage('assemblyai', 'assemblyai', 'AssemblyAI', [secret('ASSEMBLYAI_API_KEY', 'API Key')]),
@@ -234,6 +245,10 @@ export const TRANSCRIPTION_SETTINGS_GROUP: SettingsGroup = {
       secret('CARTESIA_API_KEY', 'API Key'),
       modelText('CARTESIA_TRANSCRIPTION_MODEL', '转写模型', 'ink-whisper'),
     ]),
+    transcriptionPage('stepfun', 'stepfun', 'StepFun / 阶跃', [
+      modelText('STEPFUN_TRANSCRIPTION_MODEL', '转写模型', 'stepaudio-2.5-asr',
+        '也可填 stepaudio-3-asr-max 等接口返回的模型 ID。', true),
+    ], '复用 Agent 大脑 → StepFun 的 API Key / Base URL。SSE 转写带时间戳；说话人分离暂不支持。'),
   ],
 };
 
@@ -256,6 +271,7 @@ export const ROUTE_NEEDS: Record<string, readonly (readonly string[])[]> = {
   local: [[]],
   deepgram: [['DEEPGRAM_API_KEY']],
   groq: [['GROQ_API_KEY']],
+  stepfun: [['LLM_STEPFUN_API_KEY']],
   seedance2: [['SEEDANCE_API_KEY']],
   kling: [['KLING_API_KEY']],
   hailuo: [['MINIMAX_API_KEY']],

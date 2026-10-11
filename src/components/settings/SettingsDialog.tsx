@@ -40,14 +40,14 @@ import {
   type SettingsVendorPage, type StagedValues as Values,
 } from './settingsSchema';
 import {
-  bodyRow, btnGhost, btnPrimary, catRow, chevronBox, code, dot, foot, footMsg,
-  head, iconBtn, licenseLink, navLabel, navRowStyle, overlay, panel, revealLabel,
-  routeBox, sidebar, sidebarNote, treeScroll, vendorCol,
+  bodyRow, btnGhost, btnPrimary, categoryTabStyle, code, dot, foot, footMsg,
+  head, iconBtn, licenseLink, navLabel, navRowStyle, overlay, pagePanel, pageShell, panel, revealLabel,
+  routeBox, subTabRow, subTabStyle, tabBar, tabNote, tabRow, vendorCol,
 } from './SettingsDialog.styles';
 
-// Global settings modal, three columns: left = "Classification → Capability" two-level collapsible tree (capability row = status indicator + name);
-// Center = list of providers under the current capability (generating four capabilities with a "default provider" route select at the top);
-// Right = Select the provider's configuration page (header = icon + name + configuration status, body = fields).
+// Global settings: top tabs = category, sub-tabs = capability (with status indicator);
+// left column = list of providers under the current capability (generating four capabilities with a "default provider" route select at the top);
+// right = Select the provider's configuration page (header = icon + name + configuration status, body = fields).
 // The key value only flows to the dev server via POST /api/keys (stored in memory + .env.local, already gitignore),
 // Server-side injection; GET only returns Boolean for secret, never backfills. The model/routing field is a non-secret configuration and the current value is
 // Echoed through GET's models channel.
@@ -106,7 +106,7 @@ function syncLocalAsrModel(saved: string | undefined): void {
   }
 }
 
-function useSaveKeys(values: Values, onSaved: (next: KeyStatusResponse) => void): {
+function useSaveKeys(values: Values, onSaved: (next: KeyStatusResponse) => void, revision?: string): {
   save: () => Promise<void>; saving: boolean; msg: string | null; error: string | null;
 } {
   const [saving, setSaving] = useState(false);
@@ -118,7 +118,7 @@ function useSaveKeys(values: Values, onSaved: (next: KeyStatusResponse) => void)
     setSaving(true); setError(null); setMsg(null);
     try {
       const res = await fetch('/api/keys', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...(revision ? { 'If-Match': revision } : {}) }, body: JSON.stringify(patch),
       });
       const body = await res.json().catch(() => ({})) as Partial<KeyStatusResponse> & { error?: string };
       if (!res.ok) throw new Error(body.error || t('保存失败 ({n})', { n: res.status }));
@@ -197,6 +197,7 @@ function seedSelection(initialVendor?: string): { group: SettingsGroup; vendor: 
     for (const group of category.groups) {
       const vendor = group.vendors.find((v) => v.key === initialVendor);
       if (vendor) return { group, vendor };
+      if (group.key === initialVendor && group.vendors[0]) return { group, vendor: group.vendors[0] };
     }
   }
   const first = SETTINGS_CATEGORIES[0].groups[0];
@@ -259,7 +260,7 @@ function useFieldContext(
   };
 }
 
-export function SettingsDialog({ onClose, initialVendor }: { onClose: () => void; initialVendor?: string }) {
+export function SettingsDialog({ onClose, initialVendor, presentation = 'dialog' }: { onClose: () => void; initialVendor?: string; presentation?: 'dialog' | 'page' }) {
   const t = useT();
   const updateState = useSyncExternalStore(
     subscribeUpstreamUpdate,
@@ -295,11 +296,13 @@ export function SettingsDialog({ onClose, initialVendor }: { onClose: () => void
     applySavedToAgent(next);
     // The status effect synchronizes all transcription runtime preferences.
     setValues({});
-  });
+    window.dispatchEvent(new Event('studio-models-updated'));
+  }, status?.revision);
   const dirty = Object.keys(values).length > 0;
   const { requestClose, warn } = useCloseGuard(dirty, onClose);
   useEscape(requestClose);
 
+  const fullPage = presentation === 'page';
   const updateAction = resolveUpstreamUpdateAction(updateState, hasDesktopUpdateSupport());
 
   const codexStatus = ctx.codex.status;
@@ -312,12 +315,12 @@ export function SettingsDialog({ onClose, initialVendor }: { onClose: () => void
       : msg ? { text: msg, color: ON } : null;
 
   return (
-    <div style={overlay} onMouseDown={requestClose}>
-      <div style={panel} onMouseDown={(e) => e.stopPropagation()}>
+    <div style={fullPage ? pageShell : overlay} onMouseDown={fullPage ? undefined : requestClose}>
+      <div style={fullPage ? pagePanel : panel} onMouseDown={(e) => e.stopPropagation()}>
         <header style={head}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ color: theme.accent, display: 'inline-flex' }}><Icon name="sliders" size={15} /></span>
-            <b style={{ fontSize: 14 }}>{t('设置 · API 密钥')}</b>
+            <b style={{ fontSize: 14 }}>{t(fullPage ? '模型设置' : '设置 · API 密钥')}</b>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <SettingsVersionControl
@@ -329,23 +332,23 @@ export function SettingsDialog({ onClose, initialVendor }: { onClose: () => void
             <button type="button" onClick={requestClose} title={t('关闭')} style={iconBtn}><Icon name="x" size={15} /></button>
           </div>
         </header>
+        <CapabilityTabs status={status} codexStatus={codexStatus} copilotStatus={copilotStatus}
+          claudeCodeStatus={claudeCodeStatus}
+          activeGroup={group.key} onSelect={selectGroup} />
         <div style={bodyRow}>
-          <CapabilityTree status={status} codexStatus={codexStatus} copilotStatus={copilotStatus}
-            claudeCodeStatus={claudeCodeStatus}
-            activeGroup={group.key} onSelect={selectGroup} />
           <VendorList group={group} activeVendor={page.key} onSelectVendor={selectVendor} ctx={ctx} />
           <VendorPane page={page} hint={group.hint} ctx={ctx} />
         </div>
         <FooterBar reveal={reveal} onReveal={setReveal} message={message}
-          dirty={dirty} saving={saving} onClose={requestClose} onSave={() => { void save(); }} />
+          dirty={dirty} saving={saving} onClose={requestClose} closeLabel={fullPage ? '返回' : '关闭'} onSave={() => { void save(); }} />
       </div>
     </div>
   );
 }
 
-// ── Left column (categories can be folded → capabilities can be selected) ──────────────────────────────────────
+// ── Top tabs (category tabs → capability sub-tabs) ──────────────────────────────────────
 
-function CapabilityTree({
+function CapabilityTabs({
   status, codexStatus, copilotStatus, claudeCodeStatus, activeGroup, onSelect,
 }: {
   status: KeyStatusResponse | null; codexStatus: CodexAgentStatus | null;
@@ -354,73 +357,62 @@ function CapabilityTree({
   activeGroup: string; onSelect: (key: string) => void;
 }) {
   const t = useT();
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
-  const toggle = (key: string): void =>
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (!next.delete(key)) next.add(key);
-      return next;
-    });
+  const activeCategory = SETTINGS_CATEGORIES.find((cat) => cat.groups.some((g) => g.key === activeGroup))
+    ?? SETTINGS_CATEGORIES[0];
   return (
-    <nav style={sidebar}>
-      <div style={treeScroll}>
+    <nav style={tabBar}>
+      <div role="tablist" style={tabRow}>
         {SETTINGS_CATEGORIES.map((cat) => (
-          <TreeCategory key={cat.key} category={cat} status={status} codexStatus={codexStatus}
+          <CategoryTab key={cat.key} category={cat} status={status} codexStatus={codexStatus}
             copilotStatus={copilotStatus} claudeCodeStatus={claudeCodeStatus}
-            open={!collapsed.has(cat.key)} activeGroup={activeGroup}
-            onToggle={() => toggle(cat.key)} onSelect={onSelect} />
+            active={cat.key === activeCategory.key} onSelect={() => onSelect(cat.groups[0].key)} />
         ))}
       </div>
-      <p style={sidebarNote}>
-        {t('密钥仅存本机')} <code style={code}>.env.local</code>{t('（已 gitignore），经服务端注入，')}<b>{t('不进浏览器。')}</b>
-      </p>
+      <div style={subTabRow}>
+        {activeCategory.groups.length > 1 && activeCategory.groups.map((g) => (
+          <SubTab key={g.key} title={g.title}
+            on={groupConfigured(status, g, codexStatus, copilotStatus, claudeCodeStatus)}
+            active={g.key === activeGroup} onSelect={() => onSelect(g.key)} />
+        ))}
+        <span style={tabNote}>
+          {t('密钥仅存本机')} <code style={code}>.env.local</code>{t('（已 gitignore），经服务端注入，')}<b>{t('不进浏览器。')}</b>
+        </span>
+      </div>
     </nav>
   );
 }
 
-interface TreeCategoryProps {
+function CategoryTab({
+  category, status, codexStatus, copilotStatus, claudeCodeStatus, active, onSelect,
+}: {
   category: SettingsCategory; status: KeyStatusResponse | null; codexStatus: CodexAgentStatus | null;
-  copilotStatus: CopilotAgentStatus | null;
-  claudeCodeStatus: ClaudeCodeAgentStatus | null;
-  open: boolean; activeGroup: string; onToggle: () => void; onSelect: (key: string) => void;
-}
-
-function TreeCategory({
-  category, status, codexStatus, copilotStatus, claudeCodeStatus, open, activeGroup, onToggle, onSelect,
-}: TreeCategoryProps) {
+  copilotStatus: CopilotAgentStatus | null; claudeCodeStatus: ClaudeCodeAgentStatus | null;
+  active: boolean; onSelect: () => void;
+}) {
   const t = useT();
+  const [hovered, hoverProps] = useHover();
   const { done, total } = categoryGroupStats(status, category, codexStatus, copilotStatus, claudeCodeStatus);
   return (
-    <div>
-      <button type="button" onClick={onToggle} title={open ? t('收起') : t('展开')} style={catRow}>
-        <span style={{ ...chevronBox, transform: open ? 'none' : 'rotate(-90deg)' }}>
-          <Icon name="chevronDown" size={12} />
-        </span>
-        <Icon name={category.icon} size={13} />
-        <span style={navLabel}>{t(category.title)}</span>
-        <span style={{ fontSize: 10, fontWeight: 400, color: done === total && total > 0 ? ON : theme.textDim }}>
-          {done}/{total}
-        </span>
-      </button>
-      {open && category.groups.map((g) => (
-        <GroupRow key={g.key} title={g.title}
-          on={groupConfigured(status, g, codexStatus, copilotStatus, claudeCodeStatus)}
-          active={g.key === activeGroup} onSelect={() => onSelect(g.key)} />
-      ))}
-    </div>
+    <button type="button" role="tab" aria-selected={active} onClick={onSelect} {...hoverProps}
+      style={categoryTabStyle(active, hovered)}>
+      <Icon name={category.icon} size={13} />
+      <span>{t(category.title)}</span>
+      <span style={{ fontSize: 10, fontWeight: 400, color: done === total && total > 0 ? ON : theme.textDim }}>
+        {done}/{total}
+      </span>
+    </button>
   );
 }
 
-function GroupRow({ title, on, active, onSelect }: {
+function SubTab({ title, on, active, onSelect }: {
   title: string; on: boolean; active: boolean; onSelect: () => void;
 }) {
   const t = useT();
   const [hovered, hoverProps] = useHover();
   return (
-    <button type="button" onClick={onSelect} {...hoverProps}
-      style={{ ...navRowStyle(active, hovered), paddingLeft: 19 }}>
+    <button type="button" onClick={onSelect} {...hoverProps} style={subTabStyle(active, hovered)}>
       <span style={dot(on)} />
-      <span style={navLabel}>{t(title)}</span>
+      <span>{t(title)}</span>
     </button>
   );
 }
@@ -458,10 +450,10 @@ function VendorRow({ page, on, active, onSelect }: {
 
 interface FooterBarProps {
   reveal: boolean; onReveal: (v: boolean) => void; message: { text: string; color: string } | null;
-  dirty: boolean; saving: boolean; onClose: () => void; onSave: () => void;
+  dirty: boolean; saving: boolean; onClose: () => void; closeLabel?: string; onSave: () => void;
 }
 
-function FooterBar({ reveal, onReveal, message, dirty, saving, onClose, onSave }: FooterBarProps) {
+function FooterBar({ reveal, onReveal, message, dirty, saving, onClose, closeLabel = '关闭', onSave }: FooterBarProps) {
   const t = useT();
   const disabled = saving || !dirty;
   return (
@@ -474,7 +466,7 @@ function FooterBar({ reveal, onReveal, message, dirty, saving, onClose, onSave }
         {t('第三方字体许可')}
       </a>
       <div style={{ ...footMsg, color: message?.color ?? ON }}>{message?.text ?? ''}</div>
-      <button type="button" onClick={onClose} style={btnGhost}>{t('关闭')}</button>
+      <button type="button" onClick={onClose} style={btnGhost}>{t(closeLabel)}</button>
       <button type="button" onClick={onSave} disabled={disabled}
         style={{ ...btnPrimary, opacity: disabled ? 0.5 : 1, cursor: disabled ? 'default' : 'pointer' }}>
         {saving ? t('保存中…') : t('保存')}

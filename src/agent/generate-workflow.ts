@@ -2,7 +2,7 @@ export const GENERATE_WORKFLOW = `
 ## AI image generation
 - When Fal.ai is selected or explicitly requested, use model=fal and the requested falModel (or saved Fal image default from capabilities). If neither is set, ask which Fal model to use. Follow the catalog limits instead of native-provider defaults.
 - Use submit_image only after the user explicitly asks to generate an image.
-- Default model gpt-image-2; use nano-banana for reference-heavy work; image-01 (MiniMax) for stills without references (prompt ≤1500 chars, count ≤9, no referenceAssetIds; optional promptOptimizer).
+- Default model gpt-image-2; use nano-banana for reference-heavy work; image-01 (MiniMax) for stills without references (prompt ≤1500 chars, count ≤9, no referenceAssetIds; optional promptOptimizer); stepfun for StepFun stills (prompt ≤512, count 1, no references).
 - Always provide a short descriptive name. Default aspectRatio 16:9, imageSize 1K, quality high, and count 1 (imageSize/quality are gpt-image-2-oriented).
 - If the project is not 16:9, ask for the desired aspect ratio. Never upgrade to 2K/4K unless the user explicitly requests it.
 - Pass project image asset IDs through referenceAssetIds; never fetch reference bytes yourself.

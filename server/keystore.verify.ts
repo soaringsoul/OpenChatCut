@@ -158,6 +158,8 @@ const MODEL_ROUTING_NAMES = [
   'MINIMAX_TTS_MODEL', 'MINIMAX_VIDEO_MODEL', 'MINIMAX_MUSIC_MODEL', 'MINIMAX_IMAGE_MODEL',
   'ATLASCLOUD_API_BASE', 'ATLASCLOUD_MUSIC_MODEL',
   'WAVESPEED_IMAGE_MODEL', 'BYTEPLUS_IMAGE_MODEL', 'BYTEPLUS_VIDEO_MODEL',
+  'STEPFUN_IMAGE_MODEL', 'STEPFUN_TTS_MODEL', 'STEPFUN_TTS_VOICE', 'STEPFUN_MUSIC_MODEL',
+  'STEPFUN_TRANSCRIPTION_MODEL',
   'XAI_IMAGE_MODEL', 'XAI_VIDEO_MODEL', 'OFOX_VIDEO_MODEL',
   'INWORLD_TTS_MODEL', 'FISHAUDIO_TTS_MODEL', 'SPEECHIFY_TTS_MODEL',
   'PREFERRED_IMAGE_VENDOR', 'PREFERRED_VOICE_VENDOR', 'PREFERRED_VIDEO_VENDOR', 'PREFERRED_MUSIC_VENDOR',
@@ -166,6 +168,7 @@ const MODEL_ROUTING_NAMES = [
   'R2_ENABLED', // Cloud synchronization switch (''=enable/'0'=disable)
   'R2_PRESIGN', // Browser pre-signed direct transmission (''=enabled/'0'=server-side write-through only)
   'MEDIA_DIR',  // Asset saving directory (''=default public/media/uploads),
+  'AGENT_MOTION_ROOT', // Agent Motion project root (absolute path)
   'AGENT_IMPORT_ROOTS', // Agent local-path import whitelist (comma-separated absolute dirs)
   'OPENCHATCUT_SKILLS_DIR', // User skill files directory (''=~/.openchatcut/skills)
   'PROXY_URL', // Outbound network proxy (''=use HTTPS_PROXY/HTTP_PROXY env)

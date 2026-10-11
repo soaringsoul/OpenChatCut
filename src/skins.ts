@@ -139,7 +139,9 @@ export const SKINS: readonly SkinDef[] = [
 ];
 
 const STORAGE_KEY = 'cc.skin';
-export const DEFAULT_SKIN = 'graphite';
+const DEFAULT_VERSION_KEY = 'cc.skin.defaultVersion';
+const LIGHT_DEFAULT_VERSION = '2';
+export const DEFAULT_SKIN = 'latte';
 
 const kebab = (name: string): string => name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
@@ -163,6 +165,12 @@ export function buildSkinsCss(): string {
 export function getSkin(): string {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
+    // Graphite used to be written automatically as the default. Move that
+    // untouched choice to the light skin once; a later manual pick stays.
+    if (localStorage.getItem(DEFAULT_VERSION_KEY) !== LIGHT_DEFAULT_VERSION) {
+      localStorage.setItem(DEFAULT_VERSION_KEY, LIGHT_DEFAULT_VERSION);
+      if (!saved || saved === 'graphite') return DEFAULT_SKIN;
+    }
     if (saved && SKINS.some((s) => s.id === saved)) return saved;
   } catch { /* If storage is not available, use the default*/ }
   return DEFAULT_SKIN;

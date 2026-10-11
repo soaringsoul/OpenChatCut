@@ -1,0 +1,52 @@
+import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import { readFile, stat } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import test from 'node:test';
+import { returnStudioExport } from './studio-export-return.ts';
+import type { StudioBridgeDeps } from './studio-bridge-http.ts';
+
+test('export return uses the saved project, verifies completion, and removes private temporary files', async (t) => {
+  const requests: any[] = [];
+  let fail = false;
+  const server = createServer(async (req, res) => {
+    assert.equal(req.headers.authorization, 'Bearer test-service');
+    const chunks: Buffer[] = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const body = JSON.parse(Buffer.concat(chunks).toString());
+    requests.push(body);
+    assert.equal((await readFile(body.files[0].path)).toString(), 'finished-output');
+    assert.equal(body.files[0].sha256, createHash('sha256').update('finished-output').digest('hex'));
+    res.setHeader('content-type', 'application/json');
+    res.end(JSON.stringify({ data: fail ? { status: 'failed', items: [{ errorMessage: 'assets offline' }] } : { status: 'completed', result: { assetId: 'returned', assetVersionId: 'v1' } } }));
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => server.close());
+  const address = server.address();
+  if (!address || typeof address === 'string') throw new Error('no port');
+  const previous = { base: process.env.STUDIO_BASE_URL, token: process.env.STUDIO_SERVICE_TOKEN };
+  process.env.STUDIO_BASE_URL = `http://127.0.0.1:${address.port}`;
+  process.env.STUDIO_SERVICE_TOKEN = 'test-service';
+  t.after(() => {
+    if (previous.base === undefined) delete process.env.STUDIO_BASE_URL; else process.env.STUDIO_BASE_URL = previous.base;
+    if (previous.token === undefined) delete process.env.STUDIO_SERVICE_TOKEN; else process.env.STUDIO_SERVICE_TOKEN = previous.token;
+  });
+  const ref = { sourceSystem: 'assets_os', subjectId: 'signed-in-user', assetId: 'source', assetVersionId: 'v2' };
+  const project = { id: 'project', name: 'test', fps: 30, assetIds: ['a'], timelineIds: ['tl'], doc: { version: 1, assets: [{ id: 'a', name: 'source', kind: 'video', src: '/source', durationInFrames: 30, props: { studioSource: { ref } } }], timelines: [], mediaFolders: [], activeTimelineId: 'tl' } };
+  const getProject: StudioBridgeDeps['getProject'] = async () => project;
+  const input = { pairingId: 'pair', projectId: 'project', mode: 'new-asset', outputType: 'video', fileName: '../result.mp4', bytes: Buffer.from('finished-output') };
+  assert.deepEqual(await returnStudioExport(input, getProject), { assetId: 'returned', assetVersionId: 'v1' });
+  assert.equal(requests[0].receipt.fileName, 'result.mp4');
+  assert.deepEqual(requests[0].receipt.sourceRefs, [ref]);
+  await assert.rejects(() => stat(requests[0].files[0].path), { code: 'ENOENT' });
+  await returnStudioExport(input, getProject);
+  assert.equal(requests[0].idempotencyKey, requests[1].idempotencyKey);
+  project.doc.activeTimelineId = 'other';
+  await returnStudioExport(input, getProject);
+  assert.notEqual(requests[1].idempotencyKey, requests[2].idempotencyKey);
+  fail = true;
+  await assert.rejects(() => returnStudioExport(input, getProject), /assets offline/);
+  await assert.rejects(() => stat(requests[3].files[0].path), { code: 'ENOENT' });
+  await assert.rejects(() => returnStudioExport({ ...input, mode: 'new-version' }, getProject), /追加版本/);
+  await assert.rejects(() => returnStudioExport({ ...input, bytes: Buffer.alloc(0) }, getProject), /已完成导出/);
+});

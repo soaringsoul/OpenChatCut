@@ -162,6 +162,20 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     ]
   },
   {
+    id: '11111111-1240-4000-8000-000000000017',
+    slug: 'agent-motion',
+    name: 'Agent Motion',
+    nameZh: 'Agent Motion 口播动效',
+    summary: '用本机 Agent Motion 把口播+SRT 做成动效成片，再导入素材池继续剪。',
+    scenarios: [
+      'agent-motion',
+      'motion-craft',
+      'talking-head-motion',
+      '口播动效',
+      'SRT 动效包装',
+    ],
+  },
+  {
     id: '11111111-1240-4000-8000-000000000013',
     slug: 'skill-creator',
     name: 'Skill Creator',

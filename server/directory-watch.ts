@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { Dirent } from 'node:fs';
 import { readdir, realpath } from 'node:fs/promises';
 import { basename, join } from 'node:path';
+import { isIgnoredImportDirectoryName, isIgnoredImportName } from '../shared/file-name.ts';
 import type { DirectoryImportDisposition, DirectoryImportedFile, DirectoryImportEvent, DirectoryWatchStartResult } from '../shared/directory-import.ts';
 import {
   canonicalCurrentUploadDirectory,
@@ -94,11 +95,13 @@ export async function scanImportDirectory(
       if (entry.isSymbolicLink()) continue;
       const path = join(current.path, entry.name);
       if (entry.isDirectory()) {
+        if (isIgnoredImportDirectoryName(entry.name)) continue;
         if (current.depth >= DIRECTORY_SCAN_MAX_DEPTH) {
           throw new DirectoryScanLimitError('depth', DIRECTORY_SCAN_MAX_DEPTH);
         }
         queue.push({ path, depth: current.depth + 1 });
       } else if (entry.isFile()) {
+        if (isIgnoredImportName(entry.name)) continue;
         candidates.push({ path, name: entry.name });
         if (candidates.length > DIRECTORY_SCAN_MAX_FILES) {
           throw new DirectoryScanLimitError('files', DIRECTORY_SCAN_MAX_FILES);

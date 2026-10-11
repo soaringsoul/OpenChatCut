@@ -40,6 +40,7 @@ export function buildSubmitImageArgs(args: GenerateArgs): SubmitImageArgs {
   }
   if (model === 'nano-banana') return { ...shared, imageSize: args.imageSize as SubmitImageArgs['imageSize'] };
   if (model === 'wavespeed' || model === 'byteplus') return { ...shared, imageSize: args.imageSize as SubmitImageArgs['imageSize'], width, height };
+  if (model === 'stepfun') return { ...shared, imageSize: args.imageSize as SubmitImageArgs['imageSize'] };
   const outputFormat = args.outputFormat as SubmitImageArgs['outputFormat'];
   return {
     ...shared, imageSize: args.imageSize as SubmitImageArgs['imageSize'], width, height,
@@ -98,7 +99,7 @@ function minimaxVoice(args: GenerateArgs): SubmitVoiceArgs {
   };
 }
 
-type MinimalVoiceProvider = 'inworld' | 'fishaudio' | 'speechify';
+type MinimalVoiceProvider = 'inworld' | 'fishaudio' | 'speechify' | 'stepfun';
 const minimalVoice = (provider: MinimalVoiceProvider) => (args: GenerateArgs): SubmitVoiceArgs => ({
   ...voiceBase(args, provider), modelId: str(args.modelId),
 });
@@ -127,6 +128,7 @@ const VOICE_STRATEGIES = {
   inworld: minimalVoice('inworld'),
   fishaudio: minimalVoice('fishaudio'),
   speechify: minimalVoice('speechify'),
+  stepfun: minimalVoice('stepfun'),
   openai: (args) => genericVoice(args, 'openai'),
   gemini: (args) => genericVoice(args, 'gemini'),
   mistral: (args) => genericVoice(args, 'mistral'),
@@ -190,9 +192,19 @@ const soniloMusic = (args: GenerateArgs): SubmitMusicArgs => ({
   sourceAssetId: str(args.sourceAssetId),
 });
 
-const MUSIC_STRATEGIES = { mureka: murekaMusic, minimax: minimaxMusic, atlas: atlasMusic, sonilo: soniloMusic } as const;
+function stepfunMusic(args: GenerateArgs): SubmitMusicArgs {
+  return {
+    ...musicBase(args, 'stepfun', 't2m'),
+    isInstrumental: bool(args.isInstrumental),
+  };
+}
+
+const MUSIC_STRATEGIES = {
+  mureka: murekaMusic, minimax: minimaxMusic, atlas: atlasMusic, sonilo: soniloMusic, stepfun: stepfunMusic,
+} as const;
 export function buildSubmitMusicArgs(args: GenerateArgs): SubmitMusicArgs {
-  const provider = args.provider === 'minimax' || args.provider === 'atlas' || args.provider === 'sonilo' ? args.provider : 'mureka';
+  const provider = args.provider === 'minimax' || args.provider === 'atlas' || args.provider === 'sonilo'
+    || args.provider === 'stepfun' ? args.provider : 'mureka';
   return MUSIC_STRATEGIES[provider](args);
 }
 

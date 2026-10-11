@@ -180,6 +180,12 @@ const PRESETS = new Map<string, (typeof LLM_PROVIDER_PRESETS)[number]>(
   LLM_PROVIDER_PRESETS.map((preset) => [preset.id, preset] as const),
 );
 
+/** LLM_PROVIDER may name the Codex subscription backend; API request paths treat that as unset. */
+export const CODEX_LLM_ROUTE = 'codex';
+export function apiLlmProviderSetting(value: unknown): unknown {
+  return typeof value === 'string' && value.trim().toLowerCase() === CODEX_LLM_ROUTE ? '' : value;
+}
+
 export function normalizeLlmProvider(value: unknown): LlmProvider {
   const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
   return PRESETS.has(normalized) ? normalized as LlmProvider : DEFAULT_LLM_PROVIDER;

@@ -211,6 +211,25 @@ export async function speechifyVoice(options: VoiceOptions, input: ValidVoiceReq
   return Buffer.from(result.audio_data, 'base64');
 }
 
+export async function stepfunVoice(options: VoiceOptions, input: ValidVoiceRequest): Promise<Buffer> {
+  if (!options.stepfunApiKey) throw new Error('StepFun is not configured. Set LLM_STEPFUN_API_KEY in .env.local or 设置面板.');
+  const voice = input.voiceId || options.stepfunDefaultVoice || 'zixinnansheng';
+  const response = await fetchWithProxy(`${options.stepfunBaseUrl.replace(/\/$/, '')}/audio/speech`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${options.stepfunApiKey}` },
+    body: JSON.stringify({
+      model: input.modelId || options.stepfunModel,
+      input: input.text,
+      voice,
+      response_format: 'mp3',
+    }),
+  });
+  if (!response.ok) throw new Error(await providerError(response));
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (!bytes.length) throw new Error('StepFun returned no audio');
+  return bytes;
+}
+
 export async function minimaxVoice(options: VoiceOptions, input: ValidVoiceRequest): Promise<MinimaxVoiceResult> {
   if (!options.minimaxApiKey) throw new Error('MiniMax is not configured. Set MINIMAX_API_KEY in .env.local or 设置面板.');
   const body = minimaxVoiceBody(options.minimaxModel, input);

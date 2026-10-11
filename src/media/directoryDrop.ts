@@ -1,3 +1,5 @@
+import { isIgnoredImportDirectoryName, isIgnoredImportName } from '../../shared/file-name';
+
 interface WindowWithDirectoryPicker {
   showDirectoryPicker?(options?: { mode?: 'read' | 'readwrite' }): Promise<FileSystemDirectoryHandle>;
 }
@@ -42,6 +44,7 @@ function resultOf(state: DirectoryScanState, scanned: boolean): DirectoryScanRes
 }
 
 function collectFile(file: File, state: DirectoryScanState, folderPath: readonly string[] = []): void {
+  if (isIgnoredImportName(file.name)) return;
   if (state.visitedFiles >= DIRECTORY_SCAN_MAX_FILES) {
     state.limitReached = true;
     return;
@@ -66,6 +69,7 @@ async function collectEntry(
     return;
   }
   if (!entry.isDirectory) return;
+  if (isIgnoredImportDirectoryName(entry.name)) return;
   if (depth >= DIRECTORY_SCAN_MAX_DEPTH) {
     state.depthReached = true;
     return;
@@ -142,7 +146,9 @@ async function collectHandle(
       return;
     }
     if (child.kind === 'file') collectFile(await child.getFile(), state, folderPath);
-    else await collectHandle(child, state, depth + 1, [...folderPath, child.name]);
+    else if (!isIgnoredImportDirectoryName(child.name)) {
+      await collectHandle(child, state, depth + 1, [...folderPath, child.name]);
+    }
   }
 }
 

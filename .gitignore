@@ -29,6 +29,7 @@ test-results/
 *.orig
 *.rej
 /.cache/
+/.run/
 /.tmp/
 /tmp/
 /temp/
@@ -107,3 +108,6 @@ public/whisper-cli/
 
 # Agent tooling local state (Command Code taste captures)
 .commandcode/
+
+# Encrypted model migration backups and their private encryption key
+/studio-model-backups/

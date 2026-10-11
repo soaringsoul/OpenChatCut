@@ -66,7 +66,7 @@ const RULES: Rule[] = [
     service: 'transcription via the configured provider (语音转写)',
     keywords: [
       'assemblyai', 'whisper', 'openai transcription', 'deepgram', 'groq transcription',
-      'elevenlabs scribe', 'cartesia ink', 'transcription', '转写',
+      'elevenlabs scribe', 'cartesia ink', 'stepfun', '阶跃', 'transcription', '转写',
     ],
   },
   {
@@ -149,7 +149,7 @@ export function skillDependencyPrompt(
       lines.push(
         `- ${dep.service}: this skill was written for that environment (found "${dep.keyword}"). `
         + 'You are the OpenChatCut built-in agent: run the same deterministic steps with THIS environment\'s tools '
-        + '(editor tools for timeline/media, run_skill_script for the skill\'s own scripts/… locally, run_code sandbox for generic code). '
+        + '(editor tools for timeline/media, run_skill_script for the skill\'s own scripts/… locally, run_agent_motion_script for Agent Motion project-root scripts when AGENT_MOTION_ROOT is set, run_code sandbox for generic code). '
         + 'Do not pretend an external agent exists; adapt paths like ~/.codex/skills/… to the skill\'s installed location.',
       );
       continue;

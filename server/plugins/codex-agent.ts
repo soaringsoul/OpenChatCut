@@ -140,7 +140,7 @@ function accountSummary(value: unknown): CodexAccountSummary | null {
   };
 }
 
-async function codexStatus(): Promise<CodexAgentStatus> {
+export async function codexStatus(): Promise<CodexAgentStatus> {
   const installation = await inspectCodexInstallation();
   if (!installation.installed) {
     activeClient?.stop();
@@ -229,7 +229,7 @@ export function mapCodexModels(value: unknown): CodexAgentModel[] {
   return models;
 }
 
-async function codexModels(): Promise<CodexAgentModelsResponse> {
+export async function codexModels(): Promise<CodexAgentModelsResponse> {
   try {
     const { client } = await requireClient();
     const response = await client.request(

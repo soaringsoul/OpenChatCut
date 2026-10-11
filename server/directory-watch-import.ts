@@ -1,4 +1,5 @@
 import { mkdir, realpath, stat, unlink } from 'node:fs/promises';
+import { isIgnoredImportName } from '../shared/file-name.ts';
 import { basename, extname, isAbsolute, join, relative, resolve } from 'node:path';
 import type { Stats } from 'node:fs';
 import type { DirectoryImportedFile, DirectoryImportMediaKind } from '../shared/directory-import.ts';
@@ -25,6 +26,7 @@ const KIND_BY_EXTENSION: Record<string, DirectoryImportMediaKind> = {
 };
 
 export function directoryMediaKind(name: string): DirectoryImportMediaKind | undefined {
+  if (isIgnoredImportName(name)) return undefined;
   return KIND_BY_EXTENSION[extname(name).toLowerCase()];
 }
 

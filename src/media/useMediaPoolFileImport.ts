@@ -12,6 +12,7 @@ import {
 } from './directoryDrop';
 import { mediaImportErrorMessage } from './mediaImportConflict';
 import { importMediaBatch } from './mediaPoolImport';
+import { isIgnoredImportName } from '../../shared/file-name';
 
 interface ImportLifecycle {
   onPlaceholder?: (asset: MediaAsset) => void;
@@ -133,12 +134,23 @@ export function useMediaPoolFileImport(options: UseMediaPoolFileImportOptions): 
   const [uploadRatio, setUploadRatio] = useState<number | null>(null);
   const importFiles = useCallback<ImportFiles>(async (files, folderId, targetFolderIds) => {
     if (!files?.length) return true;
+    const kept: File[] = [];
+    const keptFolderIds: Array<string | undefined> = [];
+    for (const [index, file] of Array.from(files).entries()) {
+      if (isIgnoredImportName(file.name)) continue;
+      kept.push(file);
+      keptFolderIds.push(targetFolderIds?.[index] ?? folderId);
+    }
+    if (!kept.length) {
+      setError(t('已跳过 {n} 个不支持的文件。', { n: Array.from(files).length }));
+      return true;
+    }
     setBusy(true);
     setError(null);
     setUploadRatio(0);
     try {
       const completionErrors = await importMediaBatch({
-        files: Array.from(files), targetFolderId: folderId, targetFolderIds, onImport, onMoveAssets,
+        files: kept, targetFolderId: folderId, targetFolderIds: keptFolderIds, onImport, onMoveAssets,
         onProgress: (ratio) => setUploadRatio((current) => Math.max(current ?? 0, ratio)),
       });
       if (completionErrors.length) throw completionErrors[0];
@@ -152,7 +164,7 @@ export function useMediaPoolFileImport(options: UseMediaPoolFileImportOptions): 
       setUploadRatio(null);
       if (inputRef.current) inputRef.current.value = '';
     }
-  }, [onImport, onMoveAssets, setError]);
+  }, [onImport, onMoveAssets, setError, t]);
   const pickFiles = useCallback<PickFiles>((files, folderId) => (
     importFiles(files, folderId)
   ), [importFiles]);
