@@ -144,7 +144,7 @@ const ROUTING_GROUPS: readonly RoutingGroup[] = [
     requestKeywords: ['web', 'search', 'crawl', 'website', 'skill', 'code', '网页', '搜索', '抓取', '网站', '技能', '脚本'],
     tools: [
       'web_browser', 'web_search', 'web_map', 'web_crawl', 'web_batch_scrape', 'manage_skill',
-      'install_skill', 'run_skill_script', 'run_agent_motion_script', 'run_code', 'search_fonts',
+      'install_skill', 'run_skill_script', 'run_code', 'search_fonts',
     ],
   },
 ];

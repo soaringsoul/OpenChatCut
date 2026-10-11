@@ -9,7 +9,7 @@ import { storageLifecyclePlugin } from './storage-lifecycle.ts';
 import { projectStorePlugin } from "./project-store-plugin.ts";
 import { studioBridgePlugin } from "./studio-bridge.ts";
 import { studioModelsPlugin } from './studio-models.ts';
-import { agentMotionPlugin } from "./agent-motion.ts";
+import { hyperframesMotionPlugin } from "./hyperframes-motion.ts";
 import { extensionStorePlugin } from "./extension-store.ts";
 import { exportPlugin } from "./export.ts";
 import { exportQaPlugin } from "./export-qa.ts";
@@ -80,7 +80,7 @@ export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plu
     projectStorePlugin({ http: options.projectStoreHttp }),
     studioModelsPlugin(),
     studioBridgePlugin(),
-    agentMotionPlugin(),
+    hyperframesMotionPlugin(),
     extensionStorePlugin(),
     externalAgentPlugin(),
     codexAgentPlugin(),

@@ -31,7 +31,7 @@ import { ISOLATE_VOICE_TOOL_NAMES, ISOLATE_VOICE_TOOL_SCHEMAS } from './tools/sc
 import { SKILL_TOOL_NAMES, SKILL_TOOL_SCHEMAS } from './tools/schemas/skill-tools';
 import { INSTALL_SKILL_TOOL_NAMES, INSTALL_SKILL_TOOL_SCHEMAS } from './tools/schemas/install-skill-tools';
 import { RUN_SKILL_SCRIPT_TOOL_NAMES, RUN_SKILL_SCRIPT_TOOL_SCHEMAS } from './tools/schemas/skill-exec-tools';
-import { RUN_AGENT_MOTION_TOOL_NAMES, RUN_AGENT_MOTION_TOOL_SCHEMAS } from './tools/schemas/agent-motion-exec-tools';
+import { HYPERFRAMES_MOTION_TOOL_NAMES, HYPERFRAMES_MOTION_TOOL_SCHEMAS } from './tools/schemas/hyperframes-motion-tools';
 import { WATERMARK_TOOL_NAMES, WATERMARK_TOOL_SCHEMAS } from './tools/schemas/watermark-tools';
 import { MARKERS_TOOL_NAMES, MARKERS_TOOL_SCHEMAS } from './tools/schemas/markers-tools';
 import { MG_VIDEO_TOOL_NAMES, MG_VIDEO_TOOL_SCHEMAS } from './tools/schemas/mg-video-tools';
@@ -162,7 +162,8 @@ export const TOOL_SCHEMAS: AgentToolSchema[] = [
   ...INSTALL_SKILL_TOOL_SCHEMAS,
   // Run installed-skill scripts locally (whitelisted binaries, skill dir locked).
   ...RUN_SKILL_SCRIPT_TOOL_SCHEMAS,
-  ...RUN_AGENT_MOTION_TOOL_SCHEMAS,
+  // Local HyperFrames motion worker (projects, map templates, render, import to pool).
+  ...HYPERFRAMES_MOTION_TOOL_SCHEMAS,
   // Run skill-provided scripts, FFmpeg, Node, or Python through run_code in an isolated e2b sandbox.
   ...RUN_CODE_TOOL_SCHEMAS,
   // Import probe: probe_media reads hasAudioTrack/fps/duration through ffprobe.
@@ -248,7 +249,7 @@ const EXECUTOR_GROUPS: ReadonlyArray<readonly [ReadonlySet<string>, ToolExecutor
   [SKILL_TOOL_NAMES, async () => (await import('./tools/skill-tools')).execSkillTool],
   [INSTALL_SKILL_TOOL_NAMES, async () => (await import('./tools/install-skill-tools')).execInstallSkillTool],
   [RUN_SKILL_SCRIPT_TOOL_NAMES, async () => (await import('./tools/skill-exec-tools')).execRunSkillScriptTool],
-  [RUN_AGENT_MOTION_TOOL_NAMES, async () => (await import('./tools/agent-motion-exec-tools')).execRunAgentMotionScriptTool],
+  [HYPERFRAMES_MOTION_TOOL_NAMES, async () => (await import('./tools/hyperframes-motion-tools')).execHyperframesMotionTool],
   [WATERMARK_TOOL_NAMES, async () => (await import('./tools/watermark-tools')).execWatermarkTool],
   [MARKERS_TOOL_NAMES, async () => (await import('./tools/markers-tools')).execMarkersTool],
   [MG_VIDEO_TOOL_NAMES, async () => (await import('./tools/mg-video-tools')).execMgVideoTool],

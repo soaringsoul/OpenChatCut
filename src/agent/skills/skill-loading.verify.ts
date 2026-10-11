@@ -16,7 +16,7 @@ const expectedCreativeSlugs = [
   'storyboard-shot-breakdown',
   'video-thumbnail-generator',
   'news-rough-cut',
-  'agent-motion',
+  'hyperframes-motion',
   'skill-creator',
 ];
 const root = fileURLToPath(new URL('../../../', import.meta.url));

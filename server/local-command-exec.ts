@@ -35,7 +35,6 @@ export interface LocalCommandResult {
 }
 
 export const MAX_LOCAL_COMMAND_TIMEOUT_MS = 120_000;
-export const MAX_AGENT_MOTION_TIMEOUT_MS = 600_000;
 const MAX_OUTPUT_BYTES = 512 * 1024;
 
 /** Reject interpreter invocations that execute anything but an in-dir script file. */

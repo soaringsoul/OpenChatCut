@@ -168,7 +168,7 @@ const MODEL_ROUTING_NAMES = [
   'R2_ENABLED', // Cloud synchronization switch (''=enable/'0'=disable)
   'R2_PRESIGN', // Browser pre-signed direct transmission (''=enabled/'0'=server-side write-through only)
   'MEDIA_DIR',  // Asset saving directory (''=default public/media/uploads),
-  'AGENT_MOTION_ROOT', // Agent Motion project root (absolute path)
+  'HYPERFRAMES_WORKER_URL', // Local HyperFrames motion worker (default http://127.0.0.1:8794)
   'AGENT_IMPORT_ROOTS', // Agent local-path import whitelist (comma-separated absolute dirs)
   'OPENCHATCUT_SKILLS_DIR', // User skill files directory (''=~/.openchatcut/skills)
   'PROXY_URL', // Outbound network proxy (''=use HTTPS_PROXY/HTTP_PROXY env)

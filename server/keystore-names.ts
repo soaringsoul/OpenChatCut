@@ -5,7 +5,8 @@ import { LLM_PROVIDER_PRESETS, llmProviderConfigNames } from "../shared/llm-prov
 import { MODEL_CAPABILITY_OVERRIDES_KEY } from "../shared/model-capabilities.ts";
 
 export const KEY_NAMES = [
-  "AGENT_MOTION_ROOT",
+  "HYPERFRAMES_WORKER_URL",
+  "HYPERFRAMES_WORKER_TOKEN",
   "AGENT_IMPORT_ROOTS",
   "PROXY_URL",
   "LLM_API_KEY",
@@ -197,7 +198,7 @@ export type KeyName = (typeof KEY_NAMES)[number];
 // not credentials). Deliberately a separate explicit list rather than derived from
 // KEY_NAMES: adding a key to the whitelist must never accidentally make it non-secret.
 export const NON_SECRET_NAMES: ReadonlySet<string> = new Set([
-  "AGENT_MOTION_ROOT",
+  "HYPERFRAMES_WORKER_URL",
   "AGENT_IMPORT_ROOTS",
   "PROXY_URL",
   "LLM_PROVIDER",
