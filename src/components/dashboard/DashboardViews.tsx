@@ -2,7 +2,7 @@ import { Suspense, useEffect } from 'react';
 import type { ProjectMeta } from '../../persist/projectStoreCoordinators';
 import { theme } from '../../theme';
 import { useT } from '../../i18n/locale';
-import { openPublicModelSettings } from '../../app/studioWorkspace';
+import { notifyStudioWorkspace, openPublicModelSettings, studioWorkspaceOrigin } from '../../app/studioWorkspace';
 import { DashboardHeaderLinks } from '../DashboardHeaderLinks';
 import { BrandMark, Icon, OpenChatCutWordmark } from '../icons';
 import { bindAction } from '../../shortcuts/actionRegistry';
@@ -61,8 +61,21 @@ function ProjectSearch({ value, onChange }: { value: string; onChange: (value: s
 
 export function DashboardTitlebarContent({ model }: { model: DashboardModel }) {
   const t = useT();
+  const inStudio = Boolean(studioWorkspaceOrigin());
   return (
     <>
+      {inStudio ? (
+        <button
+          type="button"
+          onClick={() => notifyStudioWorkspace('go-home')}
+          data-tip={t('媒体工作室首页')}
+          aria-label={t('媒体工作室首页')}
+          className="cc-header-btn cc-tip"
+          style={settingsBtn}
+        >
+          <Icon name="grid" size={16} />
+        </button>
+      ) : null}
       <BrandMark size={20} />
       <OpenChatCutWordmark />
       <span style={{ color: theme.textDim, fontSize: 13 }}>{t('· 我的工程')}</span>

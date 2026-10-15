@@ -9,6 +9,7 @@ import { ALL_LOCALES, getLocale, setLocale, useT } from '../i18n/locale';
 import { invokeAction, bindAction } from '../shortcuts/actionRegistry';
 import { DesktopWindowControls } from './DesktopWindowControls';
 import { TopBarIconButton } from './TopBarIconButton';
+import { notifyStudioWorkspace, studioWorkspaceOrigin } from '../app/studioWorkspace';
 
 // Lazy, like the dashboard's copy of this dialog. A static import here put the
 // whole MCP guide into the editor's eager chunk and made every lazy() built on
@@ -64,6 +65,14 @@ export function TopBar({ projectId, projectName, canUndo, canRedo, exporting, ex
   return (
     <header className={`cc-topbar cc-window-titlebar${isMacDesktop ? ' cc-window-titlebar--mac' : ''}`} style={{ gridColumn: '1 / -1', gridRow: 1, position: 'relative', height: '100%', display: 'flex', alignItems: 'center', padding: '0 6px', borderBottom: `0.5px solid ${theme.border}`, background: theme.panel, gap: 4 }}>
       <DesktopWindowControls />
+      {studioWorkspaceOrigin() ? (
+        <button className="cc-tip" data-tip={t('媒体工作室首页')} aria-label={t('媒体工作室首页')} onClick={() => notifyStudioWorkspace('go-home')}
+          style={{ width: 28, height: 28, background: 'none', border: 'none', borderRadius: 4, cursor: 'pointer', padding: 0, lineHeight: 0, display: 'grid', placeItems: 'center', color: theme.textDim }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = theme.text; e.currentTarget.style.background = theme.panelAlt; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = theme.textDim; e.currentTarget.style.background = 'none'; }}>
+          <Icon name="grid" size={16} />
+        </button>
+      ) : null}
       {/* home in a rounded chip + a vertical divider */}
       <button className="cc-tip" data-tip={t('返回工程列表')} aria-label={t('返回工程列表')} onClick={onHome}
         style={{ width: 28, height: 28, background: 'none', border: 'none', borderRadius: 4, cursor: onHome ? 'pointer' : 'default', padding: 0, lineHeight: 0, display: 'grid', placeItems: 'center', color: theme.textDim }}
