@@ -31,13 +31,17 @@ async function importRender(jobId: string, ctx: AgentContext): Promise<unknown> 
   if (out?.error) return out;
   const fps = ctx.getState().fps;
   const durationMs = Number(out.media?.durationMs) || 0;
+  if (!(durationMs > 0) || !(fps > 0)) return { error: '成片缺少有效时长或工程帧率，未导入素材池' };
+  const stableId = `hyperframes-${jobId}`;
+  const existing = ctx.getState().assets?.find((asset) => asset.id === stableId || asset.src === out.path && asset.sourceFilename === out.filename);
+  if (existing) return { success: true, assetId: existing.id, reused: true, note: '原成片已在素材池，未重复添加' };
   const asset: MediaAsset = {
-    id: crypto.randomUUID(),
+    id: stableId,
     name: String(out.name || out.filename),
     sourceFilename: String(out.filename),
     kind: 'video',
     src: String(out.path),
-    durationInFrames: Math.max(1, Math.round((durationMs / 1000) * fps)) || Math.round(5 * fps),
+    durationInFrames: Math.max(1, Math.round((durationMs / 1000) * fps)),
     width: Number(out.media?.width) || undefined,
     height: Number(out.media?.height) || undefined,
   };
@@ -58,8 +62,9 @@ export async function execHyperframesMotionTool(name: string, args: Args, ctx: A
     case 'library': return need(args, 'path') ? call('GET', `/v1/library?path=${enc(args.path)}`) : { error: 'library 需要 path' };
     case 'list': return call('GET', '/v1/projects');
     case 'create': return call('POST', '/v1/projects', pick(args, ['name', 'starter', 'width', 'height', 'fps', 'durationInFrames', 'props']));
+    case 'validate_geo': return call('POST', '/v1/geo/preview', pick(args, ['starter', 'props']));
     case 'get': return needP() ?? call('GET', `/v1/projects/${enc(pid)}`);
-    case 'update': return needP() ?? call('PATCH', `/v1/projects/${enc(pid)}`, pick(args, ['revision', 'name', 'width', 'height', 'fps', 'durationInFrames', 'props']));
+    case 'update': return needP() ?? call('PATCH', `/v1/projects/${enc(pid)}`, pick(args, ['revision', 'name', 'width', 'height', 'fps', 'durationInFrames', 'props', 'regenerate']));
     case 'files': return needP() ?? call('GET', `/v1/projects/${enc(pid)}/files${args.path ? `?path=${enc(args.path)}` : ''}`);
     case 'write_files': return needP() ?? call('PUT', `/v1/projects/${enc(pid)}/files`, pick(args, ['revision', 'files']));
     case 'render':

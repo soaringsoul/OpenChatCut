@@ -15,14 +15,15 @@ export const HYPERFRAMES_MOTION_TOOL_SCHEMAS: AgentToolSchema[] = [
     input_schema: {
       type: 'object',
       properties: {
-        action: { type: 'string', enum: ['status', 'catalog', 'library', 'create', 'get', 'list', 'update', 'files', 'write_files', 'render', 'job', 'cancel', 'editor', 'import'] },
+        action: { type: 'string', enum: ['status', 'catalog', 'library', 'validate_geo', 'create', 'get', 'list', 'update', 'files', 'write_files', 'render', 'job', 'cancel', 'editor', 'import'] },
         projectId: { type: 'string', description: '工程 ID（get/update/files/write_files/render/editor）' },
         jobId: { type: 'string', description: '任务 ID（job/cancel/import）' },
         revision: { type: 'integer', description: 'update/write_files/render 必填的当前 revision' },
         name: { type: 'string' },
-        starter: { type: 'string', enum: ['blank', 'title-card', 'china-map', 'province-map'] },
+        starter: { type: 'string', enum: ['blank', 'title-card', 'china-map', 'province-map', 'globe-flyto', 'extruded-map', 'geo-camera-story', 'route-replay', 'geo-time-series'] },
         width: { type: 'integer' }, height: { type: 'integer' }, fps: { type: 'integer' }, durationInFrames: { type: 'integer' },
-        props: { type: 'object', additionalProperties: true, description: 'title/subtitle/accent；地图另有 data（{"广东":1280}）、unit、highlight、routes（[["北京","上海"]]）、topN' },
+        props: { type: 'object', additionalProperties: true, description: '先读 blocks/<starter>/README.md。地理模板需要 crs(WGS84/GCJ02)、places/stops 或 track.segments 或 periods；也支持 input:{format,content,name,fields}。mode=recorded-time|distance-demo，sample:false 标识真实数据；省略帧数可推导时长。' },
+        regenerate: { type: 'boolean', description: 'update 时只有用户明确同意覆盖精修源码才设 true；服务端会保留恢复副本。' },
         path: { type: 'string', description: 'library 或 files 的路径' },
         query: { type: 'string', description: 'catalog 关键词' },
         files: { type: 'array', items: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' } }, required: ['path', 'content'] } },

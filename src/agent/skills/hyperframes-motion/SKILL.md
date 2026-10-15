@@ -15,6 +15,7 @@ description: 用本机 HyperFrames 动效服务制作数据动效、全国/省�
 ## 推荐流程
 
 1. `action="catalog"` 看模板。地图帮常用：
+   - `geo-camera-story`：多地点镜头；`route-replay`：GPX/GeoJSON/CSV 轨迹；`geo-time-series`：固定尺度的时期数据地图。须读对应 README，声明坐标系与真实/示例来源；无时间不可冒充记录回放。标准模板无需模型生成视频。
    - `china-map`：全国省级分级设色 + 高亮 + 飞线 + Top 排行。
    - `province-map`：省内地市分级设色（首期浙江）。
    - `title-card`：标题卡。`blank`：自主写 HTML。

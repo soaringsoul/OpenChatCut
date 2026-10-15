@@ -11,13 +11,16 @@ import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { getKey } from '../keystore.ts';
 import { uploadDir } from '../media-dir.ts';
+import { getStudioProject, saveStudioProject } from './studio-bridge.ts';
+import { applyStudioAssets } from './studio-bridge-media.ts';
 
 export const HYPERFRAMES_OWNER = 'opencut-local';
-const MAX_BODY = 8 * 1024 * 1024;
+const MAX_BODY = 64 * 1024 * 1024;
 const ID = '[0-9a-f-]{36}';
 
 /** Routes the editor may reach on the worker; anything else is refused before forwarding. */
 export const FORWARD_ROUTES: Array<[string, RegExp]> = [
+  ['POST', /^\/v1\/geo\/preview$/],
   ['GET', /^\/v1\/(status|catalog|library|projects|jobs)$/],
   ['POST', /^\/v1\/projects$/],
   ['GET', new RegExp(`^/v1/projects/${ID}(/files)?$`)],
@@ -59,7 +62,7 @@ async function readBody(req: IncomingMessage): Promise<Buffer> {
 const headers = (token: string) => ({ authorization: `Bearer ${token}`, 'x-motion-owner': HYPERFRAMES_OWNER });
 
 /** Copy a delivered MP4 from the worker into the upload dir; returns the /media/uploads path. */
-async function importRender(cfg: { url: string; token: string }, jobId: string): Promise<Record<string, unknown>> {
+async function importRender(cfg: { url: string; token: string }, jobId: string, projectId?: string): Promise<Record<string, unknown>> {
   const jobRes = await fetch(`${cfg.url}/v1/jobs/${jobId}`, { headers: headers(cfg.token) });
   const job = (await jobRes.json()) as Record<string, any>;
   if (!jobRes.ok) throw Object.assign(new Error(job?.error || `worker ${jobRes.status}`), { status: jobRes.status });
@@ -83,7 +86,20 @@ async function importRender(cfg: { url: string; token: string }, jobId: string):
       throw error;
     }
   }
-  return { ok: true, path: `/media/uploads/${name}`, filename: name, name: job.name, media: job.media ?? null, revision: job.revision };
+  const src = `/media/uploads/${name}`;
+  if (projectId) {
+    if (!/^[A-Za-z0-9_-]{1,100}$/.test(projectId)) throw Object.assign(new Error('目标工程 ID 无效'), { status: 400 });
+    const target = await getStudioProject(projectId);
+    if (!target) throw Object.assign(new Error('目标工程不存在'), { status: 404 });
+    if (!(Number(job.media?.durationMs) > 0)) throw Object.assign(new Error('成片时长未就绪'), { status: 409 });
+    const assetId = `hyperframes-${jobId}`;
+    const incoming = { id: assetId, name: String(job.name || name), sourceFilename: name, kind: 'video', src,
+      durationInFrames: Math.max(1, Math.round(Number(job.media.durationMs) / 1000 * target.fps)), width: Number(job.media.width), height: Number(job.media.height), sourceContentHash: job.media.sha256 };
+    const applied = applyStudioAssets(target.doc, [incoming]);
+    if (applied.added.length && !await saveStudioProject(projectId, applied.doc)) throw Object.assign(new Error('目标工程正在编辑，未保存素材；请稍后重试'), { status: 409 });
+    return { ok: true, persisted: true, projectId, assetId, reused: !applied.added.length, path: src, media: job.media };
+  }
+  return { ok: true, path: src, filename: name, name: job.name, media: job.media ?? null, revision: job.revision };
 }
 
 export function hyperframesMotionPlugin(): Plugin {
@@ -100,7 +116,12 @@ export function hyperframesMotionPlugin(): Plugin {
           }
           const imp = url.pathname.match(new RegExp(`^/import/(${ID})$`));
           if (imp && req.method === 'POST') {
-            sendJson(res, 200, await importRender(cfg, imp[1]));
+            const input = JSON.parse((await readBody(req)).toString('utf8') || '{}') as { projectId?: string };
+            if (!input || typeof input !== 'object' || Array.isArray(input) || input.projectId !== undefined && (typeof input.projectId !== 'string' || !/^[A-Za-z0-9_-]{1,100}$/.test(input.projectId))) {
+              sendJson(res, 400, { error: { code: 'invalid_project', message: '目标工程 ID 无效' } });
+              return;
+            }
+            sendJson(res, 200, await importRender(cfg, imp[1], input.projectId));
             return;
           }
           const method = req.method ?? 'GET';

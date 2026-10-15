@@ -4540,6 +4540,7 @@
               "status",
               "catalog",
               "library",
+              "validate_geo",
               "create",
               "get",
               "list",
@@ -4574,7 +4575,12 @@
               "blank",
               "title-card",
               "china-map",
-              "province-map"
+              "province-map",
+              "globe-flyto",
+              "extruded-map",
+              "geo-camera-story",
+              "route-replay",
+              "geo-time-series"
             ]
           },
           "width": {
@@ -4592,7 +4598,11 @@
           "props": {
             "type": "object",
             "additionalProperties": true,
-            "description": "title/subtitle/accent；地图另有 data（{\"广东\":1280}）、unit、highlight、routes（[[\"北京\",\"上海\"]]）、topN"
+            "description": "先读 blocks/<starter>/README.md。地理模板需要 crs(WGS84/GCJ02)、places/stops 或 track.segments 或 periods；也支持 input:{format,content,name,fields}。mode=recorded-time|distance-demo，sample:false 标识真实数据；省略帧数可推导时长。"
+          },
+          "regenerate": {
+            "type": "boolean",
+            "description": "update 时只有用户明确同意覆盖精修源码才设 true；服务端会保留恢复副本。"
           },
           "path": {
             "type": "string",

@@ -97,7 +97,7 @@ async function listProjects(): Promise<StudioBridgeProject[]> {
   return projects;
 }
 
-async function getProject(id: string) {
+export async function getProject(id: string) {
   const entry = await getStoredEntry(`project:${id}`);
   const doc = asDoc(entry.value);
   if (!entry.found || !doc) return null;
@@ -111,6 +111,7 @@ async function getProject(id: string) {
     doc,
   };
 }
+export { getProject as getStudioProject };
 
 export async function createStudioProject(name: string) {
   const id = `p${randomBytes(8).toString('hex')}`;
