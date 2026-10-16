@@ -21,6 +21,11 @@ const ID = '[0-9a-f-]{36}';
 /** Routes the editor may reach on the worker; anything else is refused before forwarding. */
 export const FORWARD_ROUTES: Array<[string, RegExp]> = [
   ['POST', /^\/v1\/geo\/preview$/],
+  ['GET', /^\/v1\/scene-presets$/],
+  ['GET', new RegExp(`^/v1/projects/${ID}/scenes$`)],
+  ['POST', new RegExp(`^/v1/projects/${ID}/scene-plans$`)],
+  ['POST', new RegExp(`^/v1/projects/${ID}/scene-plans/${ID}/apply$`)],
+  ['POST', new RegExp(`^/v1/projects/${ID}/scenes/undo$`)],
   ['GET', /^\/v1\/(status|catalog|library|projects|jobs)$/],
   ['POST', /^\/v1\/projects$/],
   ['GET', new RegExp(`^/v1/projects/${ID}(/files)?$`)],

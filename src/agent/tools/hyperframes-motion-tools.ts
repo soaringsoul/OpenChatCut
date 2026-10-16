@@ -58,6 +58,15 @@ export async function execHyperframesMotionTool(name: string, args: Args, ctx: A
   const needJ = () => (jid ? null : { error: `${action} 需要 jobId` });
   switch (action) {
     case 'status': return call('GET', '/v1/status');
+    case 'scene_catalog': return call('GET','/v1/scene-presets');
+    case 'scene_get': {
+      if(!pid)return needP();const out=await call('GET',`/v1/projects/${enc(pid)}/scenes`);if(out?.error)return out;
+      const {features:omitted,...document}=out.props.document;
+      return{revision:out.revision,region:out.props.region,crs:out.props.crs,sceneUndoRevision:out.sceneUndoRevision,document,features:out.props.compiled.features.map((f:{id:string;name:string;source:unknown})=>({id:f.id,name:f.name,source:f.source})),geometryOmitted:true,note:'几何保留在工程中，用update_scene等局部命令，不把摘要当完整document覆盖。'};
+    }
+    case 'scene_plan': return needP() ?? call('POST',`/v1/projects/${enc(pid)}/scene-plans`,pick(args,['revision','commands','settings']));
+    case 'scene_apply': return needP() ?? (need(args,'planId') ? call('POST',`/v1/projects/${enc(pid)}/scene-plans/${enc(args.planId)}/apply`,pick(args,['revision','regenerate'])) : {error:'scene_apply需要planId'});
+    case 'scene_undo': return needP() ?? call('POST',`/v1/projects/${enc(pid)}/scenes/undo`,pick(args,['revision']));
     case 'catalog': return call('GET', `/v1/catalog${args.query ? `?q=${enc(args.query)}` : ''}`);
     case 'library': return need(args, 'path') ? call('GET', `/v1/library?path=${enc(args.path)}`) : { error: 'library 需要 path' };
     case 'list': return call('GET', '/v1/projects');

@@ -4551,7 +4551,12 @@
               "job",
               "cancel",
               "editor",
-              "import"
+              "import",
+              "scene_catalog",
+              "scene_get",
+              "scene_plan",
+              "scene_apply",
+              "scene_undo"
             ]
           },
           "projectId": {
@@ -4580,8 +4585,26 @@
               "extruded-map",
               "geo-camera-story",
               "route-replay",
-              "geo-time-series"
+              "geo-time-series",
+              "map-scene-sequence"
             ]
+          },
+          "planId": {
+            "type": "string",
+            "description": "scene_apply使用scene_plan返回的真实计划ID"
+          },
+          "commands": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": "地图场景结构化操作：add_scene、update_scene(sceneId,patch)、remove_scene、duplicate_scene、reorder_scenes；先读blocks/map-scene-sequence/README.md"
+          },
+          "settings": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "region/crs/theme/title/subtitle/tailMs"
           },
           "width": {
             "type": "integer"

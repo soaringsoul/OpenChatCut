@@ -5,6 +5,8 @@ description: 用本机 HyperFrames 动效服务制作数据动效、全国/省�
 
 # HyperFrames 动效桥接
 
+地图场景使用工作室独立 starter `map-scene-sequence`。先 scene_catalog / scene_get；scene_plan({revision,commands}) 规划，scene_apply({revision,planId})应用，scene_undo撤销。先读 blocks/map-scene-sequence/README.md；按稳定sceneId局部修改，未知地名不猜坐标，精修源码仅在用户明确授权时regenerate。此能力没有GeoLayers/AE运行依赖。
+
 本技能通过 `hyperframes_motion` 工具调用本机 `dtb_media_studio/hyperframes_worker`（默认 `127.0.0.1:8794`）。HyperFrames 不嵌进时间线引擎：工程与渲染在 worker 里，成片用 `action=import` 进入素材池。
 
 ## 前置条件
