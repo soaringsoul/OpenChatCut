@@ -22,6 +22,7 @@ const ID = '[0-9a-f-]{36}';
 export const FORWARD_ROUTES: Array<[string, RegExp]> = [
   ['POST', /^\/v1\/geo\/preview$/],
   ['GET', /^\/v1\/scene-presets$/],
+  ['GET', /^\/v1\/map-sources$/],
   ['GET', new RegExp(`^/v1/projects/${ID}/scenes$`)],
   ['POST', new RegExp(`^/v1/projects/${ID}/scene-plans$`)],
   ['POST', new RegExp(`^/v1/projects/${ID}/scene-plans/${ID}/apply$`)],

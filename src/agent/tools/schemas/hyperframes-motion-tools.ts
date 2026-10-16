@@ -9,13 +9,14 @@ export const HYPERFRAMES_MOTION_TOOL_SCHEMAS: AgentToolSchema[] = [
       '本机 HyperFrames 动效服务（HTML+GSAP → Chrome 逐帧 → MP4，离线，思源黑体）。',
       'status 自检；catalog 列区块模板（china-map 全国地图、province-map 省级地图、title-card、blank）；library 读 skills/hyperframes/SKILL.md、docs/*.md、blocks/<id>/README.md。',
       'create 建工程（starter+props，地图模板给 data/highlight/routes 即可出片）；get/update（按 revision 改 props）；files 读、write_files 写 index.html/compositions/assets（返回 lint）。',
+      'map_sources(query地区名或adcode)查预置全国省市县边界。province-map用props.region=510000切四川，自动清除旧省统计，无需上传标准行政区GeoJSON；不编造业务数据。',
       'render kind=preview 出指定帧 PNG，kind=delivery 出 MP4；job 查进度；cancel 取消；editor 返回本机 Studio 地址。',
       'import 把 delivery 成片导入当前工程素材池（返回 assetId），之后再按需上时间线。',
     ].join(' '),
     input_schema: {
       type: 'object',
       properties: {
-        action: { type: 'string', enum: ['status', 'catalog', 'library', 'validate_geo', 'create', 'get', 'list', 'update', 'files', 'write_files', 'render', 'job', 'cancel', 'editor', 'import', 'scene_catalog', 'scene_get', 'scene_plan', 'scene_apply', 'scene_undo'] },
+        action: { type: 'string', enum: ['status', 'catalog', 'library', 'validate_geo', 'create', 'get', 'list', 'update', 'files', 'write_files', 'render', 'job', 'cancel', 'editor', 'import', 'map_sources', 'scene_catalog', 'scene_get', 'scene_plan', 'scene_apply', 'scene_undo'] },
         projectId: { type: 'string', description: '工程 ID（get/update/files/write_files/render/editor）' },
         jobId: { type: 'string', description: '任务 ID（job/cancel/import）' },
         revision: { type: 'integer', description: 'update/write_files/render 必填的当前 revision' },

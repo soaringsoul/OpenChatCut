@@ -19,7 +19,7 @@ description: 用本机 HyperFrames 动效服务制作数据动效、全国/省�
 1. `action="catalog"` 看模板。地图帮常用：
    - `geo-camera-story`：多地点镜头；`route-replay`：GPX/GeoJSON/CSV 轨迹；`geo-time-series`：固定尺度的时期数据地图。须读对应 README，声明坐标系与真实/示例来源；无时间不可冒充记录回放。标准模板无需模型生成视频。
    - `china-map`：全国省级分级设色 + 高亮 + 飞线 + Top 排行。
-   - `province-map`：省内地市分级设色（首期浙江）。
+   - `province-map`：全国省市县预置边界。先 `action="map_sources", query="四川"` 查询，`props.region="510000"` 即切四川 21 市州，无需上传。切换地区清除原地区统计，先展示行政区地图；业务数据由用户提供，禁止移用原省数字或编造统计。
    - `title-card`：标题卡。`blank`：自主写 HTML。
    读 `action="library", path="blocks/<id>/README.md"` 了解 props。
 2. 只换数据/文案：`action="create"`，`starter` + `props`（`title`、`subtitle`、`data`、`unit`、`highlight`、`routes`、`topN`）。之后用 `action="update"` 带 `revision` 改 props。

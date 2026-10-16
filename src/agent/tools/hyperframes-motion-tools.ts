@@ -58,6 +58,7 @@ export async function execHyperframesMotionTool(name: string, args: Args, ctx: A
   const needJ = () => (jid ? null : { error: `${action} 需要 jobId` });
   switch (action) {
     case 'status': return call('GET', '/v1/status');
+    case 'map_sources': return call('GET',`/v1/map-sources?q=${enc(args.query||'')}`);
     case 'scene_catalog': return call('GET','/v1/scene-presets');
     case 'scene_get': {
       if(!pid)return needP();const out=await call('GET',`/v1/projects/${enc(pid)}/scenes`);if(out?.error)return out;
